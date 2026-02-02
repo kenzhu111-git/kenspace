@@ -10,6 +10,9 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 // 存储桶名称
 const STORAGE_BUCKET = 'photos';
 
+// 数据版本号（修改时递增，强制清除旧缓存）
+const DATA_VERSION = '2';  // 2026-02-02 更新图片
+
 // 测试 Supabase Storage 是否可用
 async function testSupabaseStorage() {
     console.log('[Supabase Storage] 测试连接...');
@@ -81,6 +84,19 @@ class SimpleSupabaseClient {
         console.log('═══════════════════════════════════════════');
         console.log('[loadAll] ★ STARTING LOAD ALL OPERATION ★');
         console.log('[loadAll] Current isLoaded state:', this.isLoaded);
+        console.log('[loadAll] DATA_VERSION:', DATA_VERSION);
+        
+        // 检查数据版本，如果版本不匹配则清除旧数据
+        const savedVersion = localStorage.getItem('data_version');
+        if (savedVersion !== DATA_VERSION) {
+            console.log('[loadAll] ⚠️ 数据版本不匹配，清除旧缓存...');
+            console.log('[loadAll] 旧版本:', savedVersion, '新版本:', DATA_VERSION);
+            localStorage.removeItem('photos');
+            localStorage.removeItem('categories');
+            localStorage.removeItem('attributes');
+            localStorage.setItem('data_version', DATA_VERSION);
+            console.log('[loadAll] ✓ 已清除旧缓存并更新版本号');
+        }
         
         try {
             // 加载分类
