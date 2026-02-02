@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Hero Slider</title>
+    <style>
+        body { font-family: sans-serif; padding: 50px; }
+        .hero-slider { position: relative; height: 400px; overflow: hidden; }
+        .slide { position: absolute; inset: 0; opacity: 0; transition: opacity 0.5s; }
+        .slide.active { opacity: 1; }
+        .slide-content { position: absolute; bottom: 50px; left: 50%; transform: translateX(-50%); color: white; text-align: center; }
+    </style>
+</head>
+<body>
+    <h1>Testing Hero Slider</h1>
+    <div id="hero-slider">
+        <div class="loading">Loading...</div>
+    </div>
+
+    <script src="supabase.js"></script>
+    <script>
+        async function test() {
+            console.log('Testing...');
+            try {
+                // Check if supabase is loaded
+                console.log('supabase:', typeof window.supabase);
+
+                // Try to get banners
+                const result = await window.supabase.getBanners();
+                console.log('getBanners result:', result);
+
+                if (result.error) {
+                    throw result.error;
+                }
+
+                // Generate slides
+                const slider = document.getElementById('hero-slider');
+                slider.innerHTML = result.data.map((banner, index) => `
+                    <div class="slide ${index === 0 ? 'active' : ''}" style="background-image: url('${banner.image_url}')">
+                        <div class="slide-content">
+                            <h1>${banner.title}</h1>
+                            <p>${banner.description}</p>
+                        </div>
+                    </div>
+                `).join('');
+
+                console.log('Slides generated successfully');
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('hero-slider').innerHTML = '<p style="color: red">Error: ' + error.message + '</p>';
+            }
+        }
+
+        test();
+    </script>
+</body>
+</html>

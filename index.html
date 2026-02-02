@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <!-- SEO Meta Tags -->
+    <title>PHOTOGRAPHER | 专业摄影师个人作品集 - 极简主义摄影</title>
+    <meta name="description" content="PHOTOGRAPHER - 专注于极简主义摄影的个人作品集网站。展示风景、建筑、人像、城市、极简、街拍等摄影作品，记录光影交错的美好瞬间。">
+    <meta name="keywords" content="摄影师, 摄影作品集, 个人网站, 极简摄影, 风景摄影, 建筑摄影, 人像摄影, 城市摄影, 街拍, 艺术摄影">
+    <meta name="author" content="PHOTOGRAPHER">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://your-domain.com/">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://your-domain.com/">
+    <meta property="og:title" content="PHOTOGRAPHER | 专业摄影师个人作品集">
+    <meta property="og:description" content="专注于极简主义摄影的个人作品集，记录光影交错的美好瞬间。">
+    <meta property="og:image" content="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200">
+    <meta property="og:site_name" content="PHOTOGRAPHER">
+    <meta property="og:locale" content="zh_CN">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://your-domain.com/">
+    <meta name="twitter:title" content="PHOTOGRAPHER | 专业摄影师个人作品集">
+    <meta name="twitter:description" content="专注于极简主义摄影的个人作品集，记录光影交错的美好瞬间。">
+    <meta name="twitter:image" content="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200">
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Person",
+        "name": "PHOTOGRAPHER",
+        "jobTitle": "专业摄影师",
+        "description": "专注于极简主义摄影的摄影师，相信最好的照片往往是最简单的。",
+        "url": "https://your-domain.com",
+        "sameAs": [
+            "https://www.xiaohongshu.com/",
+            "https://www.bilibili.com/"
+        ]
+    }
+    </script>
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "PHOTOGRAPHER",
+        "url": "https://your-domain.com",
+        "description": "专业摄影师个人作品集网站",
+        "potentialAction": {
+            "@type": "SearchAction",
+            "target": {
+                "@type": "EntryPoint",
+                "urlTemplate": "https://your-domain.com/search?q={search_term_string}"
+            },
+            "query-input": "required name=search_term_string"
+        }
+    }
+    </script>
+
+    <!-- Performance Optimization -->
+    <link rel="preconnect" href="https://images.unsplash.com">
+    <link rel="dns-prefetch" href="https://images.unsplash.com">
+
+    <!-- Favicon -->
+    <link rel="icon" href="data:;base64,=">
+    <link rel="apple-touch-icon" href="https://images.unsplash.com/photo-1554048612-387768052bf7?w=180">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="styles.css">
+
+    <!-- Critical CSS -->
+    <style>
+        .navbar { will-change: transform; }
+        .hero-slider { will-change: opacity; }
+        .work-gallery { will-change: transform; }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="#" class="logo">PHOTOGRAPHER</a>
+            <ul class="nav-links">
+                <li><a href="#home" class="active">首页</a></li>
+                <li><a href="#work">作品集</a></li>
+                <li><a href="#about">关于</a></li>
+                <li><a href="#contact">联系</a></li>
+            </ul>
+            <button class="mobile-menu-btn">☰</button>
+        </div>
+    </nav>
+
+    <!-- Hero轮播区域 -->
+    <section id="home" class="hero">
+        <div class="hero-slider" id="hero-slider">
+            <div class="slide active" style="background-image: url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920')">
+                <div class="slide-content">
+                    <h1>光影之间</h1>
+                    <p>捕捉生活中的每一个瞬间</p>
+                </div>
+            </div>
+            <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1472214103451-9374bd1c798e?w=1920')">
+                <div class="slide-content">
+                    <h1>自然之美</h1>
+                    <p>探索大自然的无限魅力</p>
+                </div>
+            </div>
+            <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=1920')">
+                <div class="slide-content">
+                    <h1>城市脉络</h1>
+                    <p>记录都市的节奏与韵律</p>
+                </div>
+            </div>
+        </div>
+        <div class="hero-controls">
+            <button class="hero-btn prev" aria-label="上一张">‹</button>
+            <button class="hero-btn next" aria-label="下一张">›</button>
+        </div>
+        <div class="hero-indicators"></div>
+    </section>
+
+    <!-- 精选作品区域 -->
+    <section id="work" class="selected-work">
+        <div class="container">
+            <h2 class="section-title">Selected Work</h2>
+            <div class="work-filter">
+                <button class="filter-btn active" data-category="all">全部</button>
+                <button class="filter-btn" data-category="landscape">风景</button>
+                <button class="filter-btn" data-category="architecture">建筑</button>
+                <button class="filter-btn" data-category="portrait">人像</button>
+                <button class="filter-btn" data-category="urban">城市</button>
+                <button class="filter-btn" data-category="minimal">极简</button>
+                <button class="filter-btn" data-category="street">街拍</button>
+            </div>
+            <div class="work-gallery">
+                <!-- 作品将通过JavaScript动态加载 -->
+            </div>
+        </div>
+    </section>
+
+    <!-- 关于区域 -->
+    <section id="about" class="about">
+        <div class="container">
+            <div class="about-content">
+                <div class="about-left">
+                    <div class="about-image">
+                        <img id="about-avatar" src="https://images.unsplash.com/photo-1554048612-387768052bf7?w=600" alt="摄影师照片" onerror="this.src='https://images.unsplash.com/photo-1554048612-387768052bf7?w=600'">
+                    </div>
+                    <!-- 社交媒体二维码 -->
+                    <div id="qr-codes" class="qr-codes" style="display: none;">
+                        <div class="qr-code-item" id="qr-xiaohongshu" style="display: none;">
+                            <img src="" alt="小红书二维码" class="qr-code-img">
+                            <span class="qr-code-label">小红书</span>
+                        </div>
+                        <div class="qr-code-item" id="qr-bilibili" style="display: none;">
+                            <img src="" alt="B站二维码" class="qr-code-img">
+                            <span class="qr-code-label">B站</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="about-text">
+                    <h2 id="about-name">关于我</h2>
+                    <p class="lead" id="about-title">我是一名专注于极简主义摄影的摄影师，相信最好的照片往往是最简单的。</p>
+                    <div id="about-bio">
+                        <p>在我的镜头下，我试图捕捉那些被忽视的美好瞬间——光影的交错、空间的静谧、以及生活中转瞬即逝的诗意。</p>
+                        <p>我的作品曾在国内多个摄影展中展出，并获得了广泛的认可。我希望能够通过我的照片，与您分享这个世界的另一种美。</p>
+                    </div>
+                    <div id="about-contact" class="about-contact" style="display: none;"></div>
+                    <div class="about-stats">
+                        <div class="stat">
+                            <span class="stat-number" id="stat-photos">0</span>
+                            <span class="stat-label">作品数量</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-number">50+</span>
+                            <span class="stat-label">展览经历</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-number">10+</span>
+                            <span class="stat-label">获奖记录</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 联系区域 -->
+    <section id="contact" class="contact">
+        <div class="container">
+            <h2 class="section-title">Get In Touch</h2>
+            <div class="contact-content">
+                <div class="contact-info">
+                    <h3>联系方式</h3>
+                    <div id="contact-details">
+                        <div class="contact-item">
+                            <span class="contact-icon">📧</span>
+                            <span id="contact-email">photographer@example.com</span>
+                        </div>
+                        <div class="contact-item">
+                            <span class="contact-icon">📱</span>
+                            <span id="contact-phone">+86 123 4567 8901</span>
+                        </div>
+                        <div class="contact-item">
+                            <span class="contact-icon">📍</span>
+                            <span id="contact-location">中国，上海</span>
+                        </div>
+                    </div>
+                </div>
+                <form class="contact-form" id="contactForm">
+                    <div class="form-group">
+                        <input type="text" name="name" placeholder="您的姓名" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="email" name="email" placeholder="您的邮箱" required>
+                    </div>
+                    <div class="form-group">
+                        <textarea name="message" placeholder="请输入您的留言" rows="5" required></textarea>
+                    </div>
+                    <button type="submit" class="submit-btn">发送消息</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">PHOTOGRAPHER</div>
+                <p class="footer-text">© 2026 PHOTOGRAPHER. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Lightbox弹窗 -->
+    <div class="lightbox" id="lightbox">
+        <button class="lightbox-close">✕</button>
+        <button class="lightbox-prev">‹</button>
+        <button class="lightbox-next">›</button>
+        <div class="lightbox-content">
+            <img src="" alt="" id="lightboxImage">
+            <div class="lightbox-info">
+                <h3 id="lightboxTitle"></h3>
+                <p id="lightboxMeta"></p>
+                <div id="lightboxAttributes" class="lightbox-attributes"></div>
+            </div>
+        </div>
+        <div class="lightbox-progress"></div>
+    </div>
+
+    <script src="supabase.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

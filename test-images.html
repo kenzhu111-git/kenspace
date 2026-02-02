@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图片测试 - 城市废墟 & 自然纹理</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+            background: #1a1a1a;
+            color: #fff;
+            padding: 40px 20px;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 40px;
+            font-weight: 300;
+            letter-spacing: 2px;
+        }
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .photo-card {
+            background: #2a2a2a;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        .photo-card img {
+            width: 100%;
+            height: 300px;
+            object-fit: cover;
+            display: block;
+        }
+        .photo-info {
+            padding: 20px;
+        }
+        .photo-info h3 {
+            font-size: 18px;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        .photo-info p {
+            color: #999;
+            font-size: 14px;
+        }
+        .status {
+            padding: 20px;
+            text-align: center;
+            background: #333;
+        }
+        .status.success {
+            background: #1a5d1a;
+        }
+        .status.error {
+            background: #5d1a1a;
+        }
+        .btn {
+            display: inline-block;
+            padding: 12px 30px;
+            margin-top: 20px;
+            background: #c9a96e;
+            color: #1a1a1a;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            text-decoration: none;
+        }
+        .btn:hover {
+            background: #d4b87a;
+        }
+    </style>
+</head>
+<body>
+    <h1>图片加载测试</h1>
+    
+    <div class="gallery">
+        <!-- 城市废墟 -->
+        <div class="photo-card" id="photo-1">
+            <img src="https://images.unsplash.com/photo-1516520330072-2c4cc0c00548?w=800" alt="城市废墟" onload="onImageLoad(this, 'photo-1')" onerror="onImageError(this, 'photo-1')">
+            <div class="photo-info">
+                <h3>城市废墟</h3>
+                <p>ID: 1 | 分类: 数码</p>
+            </div>
+        </div>
+        
+        <!-- 自然纹理 -->
+        <div class="photo-card" id="photo-4">
+            <img src="https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=800" alt="自然纹理" onload="onImageLoad(this, 'photo-4')" onerror="onImageError(this, 'photo-4')">
+            <div class="photo-info">
+                <h3>自然纹理</h3>
+                <p>ID: 4 | 分类: 碳素</p>
+            </div>
+        </div>
+    </div>
+    
+    <div id="status" class="status">
+        正在测试图片加载...
+    </div>
+    
+    <div style="text-align: center;">
+        <button class="btn" onclick="clearAndReload()">清除缓存并重新测试</button>
+        <a href="index.html" class="btn" style="background: #666; color: #fff;">返回主页</a>
+    </div>
+
+    <script>
+        const results = {
+            'photo-1': false,
+            'photo-4': false
+        };
+        
+        function onImageLoad(img, id) {
+            results[id] = true;
+            updateStatus();
+        }
+        
+        function onImageError(img, id) {
+            results[id] = false;
+            updateStatus();
+            console.error('图片加载失败:', img.src);
+        }
+        
+        function updateStatus() {
+            const status = document.getElementById('status');
+            const allLoaded = results['photo-1'] && results['photo-4'];
+            
+            if (allLoaded) {
+                status.className = 'status success';
+                status.innerHTML = `
+                    <strong>✅ 所有图片加载成功！</strong><br>
+                    城市废墟: ${results['photo-1'] ? '✓' : '✗'}<br>
+                    自然纹理: ${results['photo-4'] ? '✓' : '✗'}
+                `;
+            } else {
+                status.className = 'status error';
+                status.innerHTML = `
+                    <strong>❌ 部分图片加载失败</strong><br>
+                    城市废墟: ${results['photo-1'] ? '✓' : '✗'}<br>
+                    自然纹理: ${results['photo-4'] ? '✓' : '✗'}
+                `;
+            }
+        }
+        
+        function clearAndReload() {
+            // 清除 localStorage
+            localStorage.removeItem('photos');
+            localStorage.removeItem('categories');
+            localStorage.removeItem('attributes');
+            
+            alert('已清除缓存，请刷新页面重新测试');
+            location.reload();
+        }
+        
+        // 初始状态检查
+        setTimeout(() => {
+            if (!results['photo-1'] || !results['photo-4']) {
+                updateStatus();
+            }
+        }, 3000);
+    </script>
+</body>
+</html>

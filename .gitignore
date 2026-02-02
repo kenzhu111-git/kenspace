@@ -1,0 +1,53 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+yarn-error.log
+
+# Build outputs
+dist/
+build/
+.next/
+*.log
+
+# Environment files (never commit these)
+.env
+.env.local
+.env.*.local
+.env.production
+.env.development
+
+# IDE and editor
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# OS files
+Thumbs.db
+Desktop.ini
+
+# Testing
+coverage/
+.nyc_output/
+
+# Misc
+*.pem
+.cache/
+.temp/
+.tmp/
+*.orig
+
+# Backup files
+*~
+*.bak
+*.backup
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

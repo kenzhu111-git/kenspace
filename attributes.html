@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>属性管理 - PHOTOGRAPHER</title>
+    <link rel="stylesheet" href="admin.css">
+    <style>
+        .attributes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .attribute-card {
+            background: #fff;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+        }
+        
+        .attribute-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+        }
+        
+        .attribute-card h3 {
+            font-size: 1.25rem;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .attribute-card .attribute-id {
+            font-size: 0.75rem;
+            color: #999;
+            background: #f5f5f5;
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+        
+        .attribute-card p {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 12px;
+        }
+        
+        .attribute-meta {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.85rem;
+            color: #999;
+        }
+        
+        .meta-icon {
+            font-size: 1rem;
+        }
+        
+        .attribute-card .card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 16px;
+            border-top: 1px solid #eee;
+        }
+        
+        .attribute-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .quick-add {
+            background: #f8f9fa;
+            border: 2px dashed #ddd;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            color: #999;
+        }
+        
+        .quick-add:hover {
+            border-color: #1a1a1a;
+            color: #1a1a1a;
+        }
+        
+        .quick-add-icon {
+            font-size: 2rem;
+        }
+        
+        .help-text {
+            background: #f8f9fa;
+            border-left: 4px solid #0066cc;
+            padding: 16px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h1>PHOTOGRAPHER</h1>
+                <p>后台管理</p>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="admin.html" class="nav-item" data-page="dashboard">
+                    <span class="nav-icon">📊</span>
+                    <span>数据概览</span>
+                </a>
+                <a href="photos.html" class="nav-item" data-page="photos">
+                    <span class="nav-icon">🖼️</span>
+                    <span>作品管理</span>
+                </a>
+                <a href="upload.html" class="nav-item" data-page="upload">
+                    <span class="nav-icon">➕</span>
+                    <span>上传作品</span>
+                </a>
+                <a href="categories.html" class="nav-item" data-page="categories">
+                    <span class="nav-icon">📁</span>
+                    <span>分类管理</span>
+                </a>
+                <a href="#" class="nav-item active" data-page="attributes">
+                    <span class="nav-icon">🏷️</span>
+                    <span>属性管理</span>
+                </a>
+                <a href="settings.html" class="nav-item" data-page="settings">
+                    <span class="nav-icon">⚙️</span>
+                    <span>系统设置</span>
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <a href="index.html" target="_blank" class="view-site-btn">
+                    🏠 查看网站
+                </a>
+            </div>
+        </aside>
+
+        <!-- 主内容区 -->
+        <main class="main-content">
+            <section class="admin-page active">
+                <div class="page-header">
+                    <h2>属性管理</h2>
+                    <p>管理作品的自定义属性，用于展示作品的详细信息</p>
+                </div>
+                
+                <div class="help-text">
+                    💡 <strong>提示：</strong>属性用于描述作品的具体特征，如尺寸、底片规格、工艺说明等。每个属性都可以在上传作品时填写相应的值。
+                </div>
+                
+                <div class="header-actions">
+                    <button class="btn-primary" onclick="openAddModal()">
+                        ➕ 添加属性
+                    </button>
+                </div>
+
+                <div class="attributes-grid" id="attributes-grid">
+                    <div class="loading">加载中...</div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- 添加/编辑属性模态框 -->
+    <div class="modal" id="attribute-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title">添加属性</h3>
+                <button class="modal-close" onclick="closeModal()">✕</button>
+            </div>
+            <form id="attribute-form">
+                <input type="hidden" id="attribute-id">
+                <div class="form-group">
+                    <label for="attribute-name">属性名称 *</label>
+                    <input type="text" id="attribute-name" required placeholder="例如：作品尺寸、底片尺寸、工艺说明">
+                </div>
+                <div class="form-group">
+                    <label for="attribute-description">属性描述</label>
+                    <textarea id="attribute-description" rows="2" placeholder="描述这个属性的用途..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="attribute-unit">单位（可选）</label>
+                    <input type="text" id="attribute-unit" placeholder="例如：cm、英寸、mm等">
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">保存</button>
+                    <button type="button" class="btn-secondary" onclick="closeModal()">取消</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 确认删除模态框 -->
+    <div class="modal" id="delete-modal">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h3>确认删除</h3>
+                <button class="modal-close" onclick="closeDeleteModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <p id="delete-message">确定要删除这个属性吗？此操作无法撤销。</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-danger" id="confirm-delete">删除</button>
+                <button class="btn-secondary" onclick="closeDeleteModal()">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast 通知 -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <script src="supabase.js"></script>
+    <script>
+        // 全局变量
+        let attributes = [];
+        let deleteTargetId = null;
+
+        // DOM 加载完成后执行
+        document.addEventListener('DOMContentLoaded', async function() {
+            await loadAttributes();
+            initForm();
+        });
+
+        // 加载属性
+        async function loadAttributes() {
+            const grid = document.getElementById('attributes-grid');
+            grid.innerHTML = '<div class="loading">加载中...</div>';
+            
+            try {
+                const { data: attrs, error } = await window.supabase.getAttributes();
+                if (error) throw error;
+                attributes = attrs || [];
+                renderAttributes();
+            } catch (error) {
+                console.error('加载属性失败:', error);
+                grid.innerHTML = '<div class="empty-state"><p>加载失败，请刷新重试</p></div>';
+            }
+        }
+
+        // 渲染属性列表
+        function renderAttributes() {
+            const grid = document.getElementById('attributes-grid');
+            
+            if (attributes.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state" style="grid-column: 1/-1;">
+                        <div class="empty-state-icon">🏷️</div>
+                        <h3>暂无属性</h3>
+                        <p>点击下方按钮添加您的第一个属性</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            grid.innerHTML = attributes.map(attr => `
+                <div class="attribute-card">
+                    <h3>
+                        ${attr.name}
+                        <span class="attribute-id">${attr.id}</span>
+                    </h3>
+                    <p>${attr.description || '暂无描述'}</p>
+                    <div class="attribute-meta">
+                        ${attr.unit ? `
+                            <div class="meta-item">
+                                <span class="meta-icon">📏</span>
+                                <span>单位: ${attr.unit}</span>
+                            </div>
+                        ` : ''}
+                    </div>
+                    <div class="card-footer">
+                        <span class="attribute-count">
+                            📝 用于作品详情展示
+                        </span>
+                        <div class="attribute-actions">
+                            <button class="action-btn edit" onclick="openEditModal('${attr.id}')">编辑</button>
+                            <button class="action-btn delete" onclick="openDeleteModal('${attr.id}')">删除</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('') + `
+                <div class="quick-add" onclick="openAddModal()">
+                    <div class="quick-add-icon">➕</div>
+                    <div>添加新属性</div>
+                </div>
+            `;
+        }
+
+        // 初始化表单
+        function initForm() {
+            const form = document.getElementById('attribute-form');
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const id = document.getElementById('attribute-id').value;
+                const data = {
+                    name: document.getElementById('attribute-name').value,
+                    description: document.getElementById('attribute-description').value,
+                    unit: document.getElementById('attribute-unit').value || ''
+                };
+                
+                try {
+                    let result;
+                    if (id) {
+                        // 更新
+                        result = await window.supabase.updateAttribute(id, data);
+                        showToast('属性已更新', 'success');
+                    } else {
+                        // 添加
+                        result = await window.supabase.addAttribute(data);
+                        showToast('属性已添加', 'success');
+                    }
+                    
+                    if (result.error) throw result.error;
+                    
+                    closeModal();
+                    await loadAttributes();
+                } catch (error) {
+                    showToast('操作失败: ' + error.message, 'error');
+                }
+            });
+        }
+
+        // 打开添加模态框
+        function openAddModal() {
+            document.getElementById('modal-title').textContent = '添加属性';
+            document.getElementById('attribute-form').reset();
+            document.getElementById('attribute-id').value = '';
+            document.getElementById('attribute-modal').classList.add('active');
+        }
+
+        // 打开编辑模态框
+        async function openEditModal(id) {
+            const attr = attributes.find(a => a.id === id);
+            if (!attr) return;
+            
+            document.getElementById('modal-title').textContent = '编辑属性';
+            document.getElementById('attribute-id').value = attr.id;
+            document.getElementById('attribute-name').value = attr.name || '';
+            document.getElementById('attribute-description').value = attr.description || '';
+            document.getElementById('attribute-unit').value = attr.unit || '';
+            document.getElementById('attribute-modal').classList.add('active');
+        }
+
+        // 关闭模态框
+        function closeModal() {
+            document.getElementById('attribute-modal').classList.remove('active');
+        }
+
+        // 打开删除确认
+        function openDeleteModal(id) {
+            const attr = attributes.find(a => a.id === id);
+            if (!attr) return;
+            
+            deleteTargetId = id;
+            document.getElementById('delete-message').textContent = `确定要删除属性"${attr.name}"吗？此操作无法撤销。`;
+            document.getElementById('delete-modal').classList.add('active');
+        }
+
+        // 关闭删除确认
+        function closeDeleteModal() {
+            document.getElementById('delete-modal').classList.remove('active');
+            deleteTargetId = null;
+        }
+
+        // 确认删除
+        document.getElementById('confirm-delete').addEventListener('click', async function() {
+            if (!deleteTargetId) return;
+            
+            try {
+                const result = await window.supabase.deleteAttribute(deleteTargetId);
+                if (result.error) throw result.error;
+                
+                showToast('属性已删除', 'success');
+                closeDeleteModal();
+                await loadAttributes();
+            } catch (error) {
+                showToast('删除失败: ' + error.message, 'error');
+            }
+        });
+
+        // 显示 Toast 通知
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // 点击背景关闭模态框
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.remove('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

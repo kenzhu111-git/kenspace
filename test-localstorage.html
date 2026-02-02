@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LocalStorage 测试工具</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #666;
+        }
+        button {
+            background: #4a90d9;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        button:hover {
+            background: #357abd;
+        }
+        .log {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Consolas', monospace;
+            font-size: 13px;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .status.info {
+            background: #cce5ff;
+            color: #004085;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 LocalStorage 测试工具</h1>
+        
+        <div class="test-section">
+            <h3>1. 测试 localStorage 可用性</h3>
+            <button onclick="testLocalStorage()">测试 localStorage</button>
+            <div id="test1-result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>2. 测试数据保存和读取</h3>
+            <button onclick="testSaveRead()">保存测试数据</button>
+            <button onclick="clearTestData()">清除测试数据</button>
+            <div id="test2-result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>3. 测试照片数据存储</h3>
+            <button onclick="testPhotoStorage()">测试照片存储</button>
+            <button onclick="viewPhotoData()">查看当前照片数据</button>
+            <button onclick="clearPhotoData()">清除照片数据</button>
+            <div id="test3-result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>控制台日志</h3>
+            <button onclick="copyLogs()">复制日志</button>
+            <button onclick="clearLogs()">清除日志</button>
+            <div class="log" id="console-log">日志将显示在这里...</div>
+        </div>
+    </div>
+    
+    <script>
+        const logElement = document.getElementById('console-log');
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const prefix = type === 'error' ? '❌' : type === 'success' ? '✅' : 'ℹ️';
+            const logMessage = `[${timestamp}] ${prefix} ${message}\n`;
+            
+            logElement.textContent += logMessage;
+            logElement.scrollTop = logElement.scrollHeight;
+            console.log(message);
+        }
+        
+        function showStatus(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+        
+        function testLocalStorage() {
+            log('开始测试 localStorage 可用性...');
+            
+            try {
+                // 测试基本操作
+                const testKey = '__localstorage_test__';
+                const testValue = 'test_value_' + Date.now();
+                
+                log('尝试写入测试数据...');
+                localStorage.setItem(testKey, testValue);
+                log('✓ 写入成功');
+                
+                log('尝试读取测试数据...');
+                const retrievedValue = localStorage.getItem(testKey);
+                log('✓ 读取成功');
+                
+                if (retrievedValue === testValue) {
+                    log('✓ 数据验证通过');
+                    showStatus('test1-result', '✅ localStorage 正常工作！数据可以正常保存和读取。', 'success');
+                } else {
+                    log('❌ 数据验证失败');
+                    showStatus('test1-result', '❌ localStorage 数据验证失败！读取的数据与写入的数据不匹配。', 'error');
+                }
+                
+                // 清理测试数据
+                localStorage.removeItem(testKey);
+                log('✓ 测试数据已清理');
+                
+            } catch (error) {
+                log(`❌ localStorage 不可用: ${error.message}`, 'error');
+                log(`错误类型: ${error.name}`, 'error');
+                showStatus('test1-result', `❌ localStorage 不可用！<br>错误信息: ${error.message}<br>这可能是因为：<br>1. 浏览器处于隐私模式<br>2. 存储空间已满<br>3. 浏览器禁用了 localStorage`, 'error');
+            }
+        }
+        
+        function testSaveRead() {
+            log('开始测试数据保存和读取...');
+            
+            try {
+                const testData = {
+                    id: 'test_' + Date.now(),
+                    title: '测试照片',
+                    category: 'digital',
+                    year: 2024,
+                    description: '这是一条测试数据',
+                    thumbnail_url: 'data:image/jpeg;base64,test',
+                    image_url: 'data:image/jpeg;base64,test',
+                    is_active: true,
+                    sort_order: 999,
+                    attributes: {},
+                    created_at: new Date().toISOString()
+                };
+                
+                log('创建测试数据对象...');
+                log(`测试数据 ID: ${testData.id}`);
+                log(`测试数据标题: ${testData.title}`);
+                
+                // 模拟 supabaseClient.photos
+                window.testPhotos = [];
+                window.testPhotos.push(testData);
+                log(`当前 photos 数组长度: ${window.testPhotos.length}`);
+                
+                // 保存到 localStorage
+                log('保存到 localStorage...');
+                const dataToSave = JSON.stringify(window.testPhotos);
+                log(`数据长度: ${dataToSave.length} 字符`);
+                localStorage.setItem('test_photos', dataToSave);
+                log('✓ 保存成功');
+                
+                // 重新读取
+                log('从 localStorage 重新读取...');
+                const savedData = localStorage.getItem('test_photos');
+                log(`读取到的数据长度: ${savedData ? savedData.length : 0} 字符`);
+                
+                if (savedData) {
+                    const parsedData = JSON.parse(savedData);
+                    log(`解析后的数组长度: ${parsedData.length}`);
+                    log(`解析后的第一个元素标题: ${parsedData[0]?.title}`);
+                    
+                    if (parsedData.length === window.testPhotos.length && 
+                        parsedData[0]?.title === testData.title) {
+                        log('✓ 数据保存和读取测试完全通过！');
+showStatus('test2-result', `✅ 数据保存和读取测试通过！<br>保存了 ${parsedData.length} 条数据`, 'success');
+                    } else {
+                        log('❌ 数据验证失败');
+                        showStatus('test2-result', '❌ 数据验证失败！保存的数据与读取的数据不匹配。', 'error');
+                    }
+                } else {
+                    log('❌ 无法读取保存的数据');
+                    showStatus('test2-result', '❌ 无法读取保存的数据！', 'error');
+                }
+                
+            } catch (error) {
+                log(`❌ 测试失败: ${error.message}`, 'error');
+                showStatus('test2-result', `❌ 测试失败: ${error.message}`, 'error');
+            }
+        }
+        
+        function clearTestData() {
+            log('清除测试数据...');
+            localStorage.removeItem('test_photos');
+            window.testPhotos = [];
+            log('✓ 测试数据已清除');
+            showStatus('test2-result', '🗑️ 测试数据已清除', 'info');
+        }
+        
+        function testPhotoStorage() {
+            log('开始测试照片数据存储...');
+            
+            try {
+                // 检查当前照片数据
+                const currentPhotos = localStorage.getItem('photos');
+                log(`当前 localStorage 中的照片数据: ${currentPhotos ? '存在' : '不存在'}`);
+                
+                if (currentPhotos) {
+                    const parsedPhotos = JSON.parse(currentPhotos);
+                    log(`当前照片数量: ${parsedPhotos.length}`);
+                    
+                    // 添加测试照片
+                    const testPhoto = {
+                        id: 'test_photo_' + Date.now(),
+                        title: '测试上传的照片 ' + new Date().toLocaleTimeString(),
+                        category: 'digital',
+                        year: 2024,
+                        description: '这是一张测试照片，用于验证上传功能',
+                        thumbnail_url: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAn/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCwAB//2Q==',
+                        image_url: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAn/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCwAB//2Q==',
+                        is_active: true,
+                        sort_order: parsedPhotos.length + 1,
+                        attributes: { size: '30x40' },
+                        created_at: new Date().toISOString()
+                    };
+                    
+                    parsedPhotos.push(testPhoto);
+                    log(`添加测试照片后的数量: ${parsedPhotos.length}`);
+                    
+                    // 保存
+                    const newData = JSON.stringify(parsedPhotos);
+                    log(`新数据长度: ${newData.length} 字符`);
+                    localStorage.setItem('photos', newData);
+                    log('✓ 测试照片已保存');
+                    
+                    // 验证
+                    const verifyPhotos = localStorage.getItem('photos');
+                    if (verifyPhotos) {
+                        const parsedVerify = JSON.parse(verifyPhotos);
+                        log(`验证: 当前照片数量: ${parsedVerify.length}`);
+                        
+                        if (parsedVerify.length === parsedPhotos.length) {
+                            log('✓ 照片存储测试通过！');
+                            showStatus('test3-result', `✅ 照片存储测试通过！<br>当前共有 ${parsedVerify.length} 张照片`, 'success');
+                        } else {
+                            log('❌ 照片数量不匹配');
+                            showStatus('test3-result', '❌ 照片数量不匹配！', 'error');
+                        }
+                    }
+                } else {
+                    log('⚠️ localStorage 中没有照片数据');
+                    showStatus('test3-result', '⚠️ localStorage 中没有照片数据，请先上传一张照片', 'info');
+                }
+                
+            } catch (error) {
+                log(`❌ 测试失败: ${error.message}`, 'error');
+                showStatus('test3-result', `❌ 测试失败: ${error.message}`, 'error');
+            }
+        }
+        
+        function viewPhotoData() {
+            log('查看当前照片数据...');
+            
+            try {
+                const photos = localStorage.getItem('photos');
+                if (photos) {
+                    const parsedPhotos = JSON.parse(photos);
+                    log(`照片总数: ${parsedPhotos.length}`);
+                    
+                    parsedPhotos.forEach((photo, index) => {
+                        log(`照片 ${index + 1}: ${photo.title} (${photo.category})`);
+                    });
+                    
+                    showStatus('test3-result', `📸 当前共有 ${parsedPhotos.length} 张照片`, 'info');
+                } else {
+                    log('⚠️ 没有找到照片数据');
+                    showStatus('test3-result', '⚠️ 没有找到照片数据', 'info');
+                }
+            } catch (error) {
+                log(`❌ 查看失败: ${error.message}`, 'error');
+            }
+        }
+        
+        function clearPhotoData() {
+            log('清除照片数据...');
+            localStorage.removeItem('photos');
+            log('✓ 照片数据已清除');
+            showStatus('test3-result', '🗑️ 照片数据已清除（将使用默认数据）', 'info');
+        }
+        
+        function copyLogs() {
+            const logs = logElement.textContent;
+            navigator.clipboard.writeText(logs).then(() => {
+                log('✓ 日志已复制到剪贴板');
+            }).catch(() => {
+                log('❌ 复制失败，请手动选择复制');
+            });
+        }
+        
+        function clearLogs() {
+            logElement.textContent = '日志已清除...\n';
+            log('日志已清除');
+        }
+        
+        // 初始化
+        log('🧪 LocalStorage 测试工具已就绪');
+        log('请按照以下步骤测试:');
+        log('1. 点击"测试 localStorage"检查浏览器存储功能');
+        log('2. 点击"测试照片存储"验证照片数据保存');
+        log('3. 如果测试失败，请复制日志并发送给开发者');
+    </script>
+</body>
+</html>

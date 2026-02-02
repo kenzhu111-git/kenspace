@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supabase Storage 测试</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #666;
+        }
+        button {
+            background: #4a90d9;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        button:hover {
+            background: #357abd;
+        }
+        .log {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Consolas', monospace;
+            font-size: 13px;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .status.info {
+            background: #cce5ff;
+            color: #004085;
+        }
+        .test-result {
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .test-result.pass {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+        }
+        .test-result.fail {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+        }
+        .test-result.pending {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 Supabase Storage 测试工具</h1>
+        
+        <div class="test-section">
+            <h3>步骤 1: 检查存储桶配置</h3>
+            <button onclick="testStorageBucket()">测试存储桶</button>
+            <button onclick="clearLogs()">清除日志</button>
+            <div id="bucket-test-result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>步骤 2: 测试文件上传</h3>
+            <p>选择一个小型图片文件（小于 500KB）进行测试：</p>
+            <input type="file" id="test-file" accept="image/*">
+            <button onclick="testUpload()">上传测试</button>
+            <div id="upload-test-result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>步骤 3: 测试结果</h3>
+            <div id="test-results"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>详细日志</h3>
+            <button onclick="copyLogs()">复制日志</button>
+            <button onclick="clearLogs()">清除日志</button>
+            <div class="log" id="console-log">日志将显示在这里...</div>
+        </div>
+    </div>
+    
+    <script src="supabase.js"></script>
+    <script>
+        const logElement = document.getElementById('console-log');
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const prefix = type === 'error' ? '❌' : type === 'success' ? '✅' : type === 'warning' ? '⚠️' : 'ℹ️';
+            const logMessage = `[${timestamp}] ${prefix} ${message}\n`;
+            
+            logElement.textContent += logMessage;
+            logElement.scrollTop = logElement.scrollHeight;
+            console.log(message);
+        }
+        
+        function showStatus(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+        
+        function addTestResult(containerId, message, passed) {
+            const container = document.getElementById(containerId);
+            const result = document.createElement('div');
+            result.className = `test-result ${passed ? 'pass' : 'fail'}`;
+            result.innerHTML = message;
+            container.appendChild(result);
+        }
+        
+        function clearLogs() {
+            logElement.textContent = '日志已清除...\n';
+            log('日志已清除');
+        }
+        
+        function copyLogs() {
+            const logs = logElement.textContent;
+            navigator.clipboard.writeText(logs).then(() => {
+                log('✓ 日志已复制到剪贴板');
+            }).catch(() => {
+                log('❌ 复制失败，请手动选择复制');
+            });
+        }
+        
+        // 测试存储桶
+        async function testStorageBucket() {
+            log('========================================');
+            log('开始测试 Supabase Storage...');
+            log('bucket 名称: ' + STORAGE_BUCKET);
+            log('Supabase URL: ' + SUPABASE_URL);
+            
+            showStatus('bucket-test-result', '测试中...', 'info');
+            document.getElementById('bucket-test-result').innerHTML = '';
+            document.getElementById('upload-test-result').innerHTML = '';
+            document.getElementById('test-results').innerHTML = '';
+            
+            try {
+                // 测试 1: 检查 bucket 是否存在
+                log('测试 1: 检查 bucket 配置...');
+                const testResponse = await fetch(
+                    `${SUPABASE_URL}/storage/v1/object/list/${STORAGE_BUCKET}`,
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                            'apikey': SUPABASE_ANON_KEY,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ prefix: '', limit: 1 })
+                    }
+                );
+                
+                log('响应状态: ' + testResponse.status + ' ' + testResponse.statusText);
+                
+                if (testResponse.ok) {
+                    log('✅ 存储桶访问成功！');
+                    addTestResult('bucket-test-result', '<strong>存储桶配置正确</strong><br>可以正常访问 Storage API', true);
+                    
+                    // 测试 2: 检查 bucket 是否为 public
+                    log('测试 2: 检查 bucket 权限...');
+                    const bucketsResponse = await fetch(
+                        `${SUPABASE_URL}/storage/v1/bucket`,
+                        {
+                            method: 'GET',
+                            headers: {
+                                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                                'apikey': SUPABASE_ANON_KEY
+                            }
+                        }
+                    );
+                    
+                    if (bucketsResponse.ok) {
+                        const buckets = await bucketsResponse.json();
+                        log('获取到 bucket 列表: ' + JSON.stringify(buckets));
+                        
+                        // 如果列表为空，尝试直接查询特定 bucket
+                        if (!buckets || buckets.length === 0) {
+                            log('⚠️ bucket 列表为空，尝试直接查询...');
+                            const singleBucketResponse = await fetch(
+                                `${SUPABASE_URL}/storage/v1/bucket/${STORAGE_BUCKET}`,
+                                {
+                                    method: 'GET',
+                                    headers: {
+                                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                                        'apikey': SUPABASE_ANON_KEY
+                                    }
+                                }
+                            );
+                            
+                            if (singleBucketResponse.ok) {
+                                const singleBucket = await singleBucketResponse.json();
+                                log('直接查询结果: ' + JSON.stringify(singleBucket));
+                                log('bucket Public: ' + singleBucket.public);
+                                if (singleBucket.public) {
+                                    log('✅ bucket 已经是 Public！');
+                                    addTestResult('bucket-test-result', '<strong>Public 权限已启用</strong><br>文件将可以通过公开链接访问', true);
+                                } else {
+                                    log('⚠️ bucket 不是 Public，需要在 Supabase 后台设置');
+                                    addTestResult('bucket-test-result', '<strong>警告: bucket 不是 Public</strong><br>请在 Supabase 后台将 bucket 设置为 Public', false);
+                                }
+                            } else {
+                                log('直接查询也失败，但 API 可以列出文件，说明 bucket 存在');
+                                log('跳过权限检查，直接进行上传测试');
+                                addTestResult('bucket-test-result', '<strong>存储桶存在且可访问</strong><br>（权限检查跳过，上传测试将验证公开访问）', true);
+                            }
+                        } else {
+                            const photoBucket = buckets.find(b => b.name === STORAGE_BUCKET);
+                            if (photoBucket) {
+                                log('bucket Public: ' + photoBucket.public);
+                                if (photoBucket.public) {
+                                    log('✅ bucket 已经是 Public！');
+                                    addTestResult('bucket-test-result', '<strong>Public 权限已启用</strong><br>文件将可以通过公开链接访问', true);
+                                } else {
+                                    log('⚠️ bucket 不是 Public，需要在 Supabase 后台设置');
+                                    addTestResult('bucket-test-result', '<strong>警告: bucket 不是 Public</strong><br>请在 Supabase 后台将 bucket 设置为 Public', false);
+                                }
+                            } else {
+                                log('❌ 未找到名为 ' + STORAGE_BUCKET + ' 的 bucket');
+                                addTestResult('bucket-test-result', '<strong>错误: 未找到 bucket</strong><br>请确认 bucket 名称是否正确', false);
+                            }
+                        }
+                    }
+                    
+                    // 测试 3: 尝试列出文件
+                    log('测试 3: 列出 bucket 中的文件...');
+                    const listResponse = await fetch(
+                        `${SUPABASE_URL}/storage/v1/object/list/${STORAGE_BUCKET}`,
+                        {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                                'apikey': SUPABASE_ANON_KEY,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ prefix: '', limit: 10 })
+                        }
+                    );
+                    
+                    if (listResponse.ok) {
+                        const files = await listResponse.json();
+                        log('bucket 中有 ' + (files.length || 0) + ' 个文件');
+                        log('✅ 成功列出文件！');
+                        addTestResult('bucket-test-result', '<strong>API 调用成功</strong><br>可以正常列出文件', true);
+                    } else {
+                        log('❌ 列出文件失败: ' + listResponse.status);
+                    }
+                    
+                } else {
+                    const errorText = await testResponse.text();
+                    log('❌ 存储桶访问失败: ' + errorText);
+                    addTestResult('bucket-test-result', '<strong>存储桶访问失败</strong><br>错误: ' + testResponse.status + '<br>' + errorText, false);
+                    
+                    // 提供解决方案
+                    let solution = '<br><br><strong>可能的原因：</strong>';
+                    solution += '<br>1. CORS 未配置 - 需在 Supabase 后台设置 CORS';
+                    solution += '<br>2. Bucket 名称错误 - 当前使用: ' + STORAGE_BUCKET;
+                    solution += '<br>3. API Key 权限问题';
+                    solution += '<br><br><strong>请检查：</strong>';
+                    solution += '<br>- Supabase 后台 → Storage → Settings → CORS';
+                    solution += '<br>- 确保已创建名为 "' + STORAGE_BUCKET + '" 的 bucket';
+                    solution += '<br>- Bucket 必须设置为 Public';
+                    addTestResult('bucket-test-result', solution, false);
+                }
+                
+            } catch (error) {
+                log('❌ 测试过程中发生错误: ' + error.message);
+                log('错误堆栈: ' + error.stack);
+                addTestResult('bucket-test-result', '<strong>测试失败</strong><br>' + error.message, false);
+            }
+            
+            log('测试完成');
+            log('========================================');
+        }
+        
+        // 测试上传
+        async function testUpload() {
+            const fileInput = document.getElementById('test-file');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                log('❌ 请先选择一个文件');
+                showStatus('upload-test-result', '请先选择一个文件', 'error');
+                return;
+            }
+            
+            if (file.size > 10 * 1024 * 1024) {
+                log('❌ 文件太大，不能超过 10MB');
+                showStatus('upload-test-result', '文件太大，不能超过 10MB', 'error');
+                return;
+            }
+            
+            log('========================================');
+            log('开始上传测试...');
+            log('文件名: ' + file.name);
+            log('文件大小: ' + (file.size / 1024).toFixed(2) + ' KB');
+            log('文件类型: ' + file.type);
+            
+            showStatus('upload-test-result', '上传中...', 'info');
+            
+            try {
+                const result = await window.supabase.upload('photos', 'test_' + Date.now() + '_' + file.name, file);
+                
+                if (result.error) {
+                    log('❌ 上传失败: ' + result.error.message);
+                    addTestResult('upload-test-result', '<strong>上传失败</strong><br>' + result.error.message, false);
+                } else {
+                    log('✅ 上传成功！');
+                    log('文件 URL: ' + result.data.path);
+                    addTestResult('upload-test-result', '<strong>上传成功！</strong><br><a href="' + result.data.path + '" target="_blank">点击查看文件</a>', true);
+                }
+                
+            } catch (error) {
+                log('❌ 上传异常: ' + error.message);
+                addTestResult('upload-test-result', '<strong>上传异常</strong><br>' + error.message, false);
+            }
+            
+            log('上传测试完成');
+            log('========================================');
+        }
+        
+        // 初始化
+        log('🧪 Supabase Storage 测试工具已就绪');
+        log('请按以下步骤测试:');
+        log('1. 点击"测试存储桶"检查配置');
+        log('2. 如果测试通过，尝试上传一个文件');
+        log('3. 如果有问题，请复制日志发送给我');
+    </script>
+</body>
+</html>

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Test Page</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        .hero-slider { position: relative; height: 400px; overflow: hidden; background: #333; }
+        .slide { position: absolute; inset: 0; opacity: 0; transition: opacity 0.5s; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px; }
+        .slide.active { opacity: 1; }
+        .loading { color: white; }
+        #log { margin-top: 20px; padding: 10px; background: #f0f0f0; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <h1>Test Page</h1>
+    
+    <div class="hero-slider">
+        <div class="slide active" style="background-image: url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920')">
+            Slide 1
+        </div>
+        <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1472214103451-9374bd1c798e?w=1920')">
+            Slide 2
+        </div>
+        <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=1920')">
+            Slide 3
+        </div>
+    </div>
+    
+    <div id="log"></div>
+
+    <script>
+        const log = document.getElementById('log');
+        function write(msg) {
+            log.textContent += new Date().toLocaleTimeString() + ': ' + msg + '\n';
+            console.log(msg);
+        }
+        
+        write('Page loaded');
+        write('Testing JavaScript...');
+        
+        // Test supabase
+        write('Testing supabase...');
+        if (typeof window.supabase !== 'undefined') {
+            write('supabase is loaded');
+            write('supabase.getBanners exists: ' + (typeof window.supabase.getBanners === 'function'));
+        } else {
+            write('supabase is NOT loaded');
+        }
+        
+        // Test slider
+        const slides = document.querySelectorAll('.slide');
+        write('Found ' + slides.length + ' slides');
+        
+        // Simple slider test
+        let current = 0;
+        setInterval(() => {
+            slides[current].classList.remove('active');
+            current = (current + 1) % slides.length;
+            slides[current].classList.add('active');
+        }, 3000);
+        
+        write('Slider initialized');
+        write('Test complete');
+    </script>
+</body>
+</html>
