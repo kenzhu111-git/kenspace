@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据同步工具 - PHOTOGRAPHER</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .status {
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-size: 14px;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.info {
+            background: #cce5ff;
+            color: #004085;
+            border: 1px solid #b8daff;
+        }
+        button {
+            width: 100%;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 10px 0;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        .btn-danger:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+        }
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        .btn-success:hover {
+            background: #218838;
+        }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+        }
+        .photo-list {
+            margin: 15px 0;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .photo-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .photo-item:last-child {
+            border-bottom: none;
+        }
+        .photo-item img {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-right: 15px;
+        }
+        .photo-item .info {
+            flex: 1;
+        }
+        .photo-item .title {
+            font-weight: bold;
+            color: #333;
+        }
+        .photo-item .meta {
+            font-size: 12px;
+            color: #666;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔄 数据同步工具</h1>
+        <p style="text-align: center; color: #666; margin-bottom: 20px;">
+            修复前后端数据不一致问题
+        </p>
+
+        <div id="app">
+            <!-- 状态显示 -->
+            <div id="status"></div>
+
+            <!-- 操作按钮 -->
+            <button class="btn-danger" onclick="clearCache()">
+                🗑️ 清除本地缓存
+            </button>
+
+            <button class="btn-primary" onclick="fetchFromSupabase()">
+                🔄 从 Supabase 同步数据
+            </button>
+
+            <button class="btn-success" onclick="openFrontend()">
+                🌐 打开前端页面
+            </button>
+
+            <!-- 日志 -->
+            <div class="log" id="log"></div>
+
+            <!-- 作品列表 -->
+            <h3 style="margin-top: 20px; color: #333;">当前作品数据：</h3>
+            <div class="photo-list" id="photoList">
+                <div class="status info">点击"从 Supabase 同步数据"查看</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="supabase.js"></script>
+    <script>
+        const log = document.getElementById('log');
+        const status = document.getElementById('status');
+        const photoList = document.getElementById('photoList');
+
+        function addLog(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString('zh-CN');
+            log.innerHTML += `[${timestamp}] ${message}\n`;
+            log.scrollTop = log.scrollHeight;
+        }
+
+        function showStatus(message, type = 'info') {
+            status.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+
+        // 清除本地缓存
+        async function clearCache() {
+            addLog('开始清除本地缓存...', 'info');
+
+            const keysToRemove = [
+                'photos',
+                'categories',
+                'attributes',
+                'about',
+                'contact',
+                'data_version'
+            ];
+
+            keysToRemove.forEach(key => {
+                localStorage.removeItem(key);
+                addLog(`✓ 已清除: ${key}`, 'success');
+            });
+
+            showStatus('✅ 本地缓存已清除！', 'success');
+            addLog('缓存清除完成，请重新同步数据', 'success');
+        }
+
+        // 从 Supabase 获取数据
+        async function fetchFromSupabase() {
+            addLog('开始从 Supabase 同步数据...', 'info');
+            showStatus('🔄 正在同步数据...', 'info');
+
+            try {
+                // 清除旧缓存
+                addLog('清除旧缓存...', 'info');
+                localStorage.removeItem('photos');
+                localStorage.removeItem('categories');
+                localStorage.removeItem('attributes');
+                localStorage.removeItem('data_version');
+
+                // 重新初始化数据
+                addLog('重新加载数据...', 'info');
+                const client = new SimpleSupabaseClient();
+                await client.loadAll();
+
+                // 获取作品数据
+                addLog('获取作品列表...', 'info');
+                const { data: photos } = await client.getPhotos();
+
+                if (photos && photos.length > 0) {
+                    addLog(`✓ 获取到 ${photos.length} 个作品`, 'success');
+
+                    // 保存到 localStorage
+                    localStorage.setItem('photos', JSON.stringify(photos));
+                    addLog('✓ 作品数据已保存到本地', 'success');
+
+                    // 显示作品列表
+                    displayPhotos(photos);
+
+                    showStatus(`✅ 同步成功！共 ${photos.length} 个作品`, 'success');
+                    addLog('数据同步完成！请刷新前端页面查看最新数据', 'success');
+                } else {
+                    addLog('⚠️ 未获取到任何作品数据', 'error');
+                    showStatus('⚠️ 未找到作品数据，请检查 Supabase 配置', 'error');
+                }
+            } catch (error) {
+                addLog(`❌ 同步失败: ${error.message}`, 'error');
+                showStatus(`❌ 同步失败: ${error.message}`, 'error');
+            }
+        }
+
+        // 显示作品列表
+        function displayPhotos(photos) {
+            if (!photos || photos.length === 0) {
+                photoList.innerHTML = '<div class="status info">暂无作品数据</div>';
+                return;
+            }
+
+            let html = '';
+            photos.forEach(photo => {
+                html += `
+                    <div class="photo-item">
+                        <img src="${photo.thumbnail_url || photo.thumbnailUrl}" alt="${photo.title}" onerror="this.src='https://via.placeholder.com/60?text=?'">
+                        <div class="info">
+                            <div class="title">${photo.title}</div>
+                            <div class="meta">${photo.category} • ${photo.year || '未知年份'}</div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            photoList.innerHTML = html;
+        }
+
+        // 打开前端页面
+        function openFrontend() {
+            window.open('https://ufod1fi7ijge.space.minimaxi.com/', '_blank');
+            addLog('已打开前端页面', 'info');
+        }
+
+        // 页面加载时自动同步
+        window.addEventListener('load', function() {
+            addLog('页面加载完成，准备同步数据...', 'info');
+            fetchFromSupabase();
+        });
+    </script>
+</body>
+</html>
