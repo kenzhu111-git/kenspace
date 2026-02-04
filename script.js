@@ -5,6 +5,9 @@
 
 // DOM 加载完成后执行
 document.addEventListener('DOMContentLoaded', async function() {
+    // 初始化 Supabase 客户端
+    await initSupabase();
+    
     // 初始化各个模块
     initNavigation();
     await initHeroSlider();
