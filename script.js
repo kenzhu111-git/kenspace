@@ -663,9 +663,22 @@ async function loadAboutInfo() {
     console.log('[loadAboutInfo] 开始加载关于我信息...');
 
     try {
-        // 检查 supabase 是否可用
+        // 等待 supabase 初始化完成
+        if (!window.supabase || !window.supabase.isLoaded) {
+            console.log('[loadAboutInfo] 等待 supabase 初始化...');
+            // 最多等待 3 秒
+            for (let i = 0; i < 30; i++) {
+                await new Promise(r => setTimeout(r, 100));
+                if (window.supabase && window.supabase.isLoaded) {
+                    console.log('[loadAboutInfo] ✓ supabase 已就绪');
+                    break;
+                }
+            }
+        }
+
+        // 再次检查
         if (!window.supabase || typeof window.supabase.getAbout !== 'function') {
-            console.warn('[loadAboutInfo] supabase not ready, skipping');
+            console.warn('[loadAboutInfo] supabase 初始化失败, 跳过');
             return;
         }
 
@@ -811,9 +824,22 @@ async function loadAboutInfo() {
 async function loadContactInfo() {
     console.log('[loadContactInfo] 开始加载联系信息...');
     try {
-        // 检查 supabase 是否可用
+        // 等待 supabase 初始化完成
+        if (!window.supabase || !window.supabase.isLoaded) {
+            console.log('[loadContactInfo] 等待 supabase 初始化...');
+            // 最多等待 3 秒
+            for (let i = 0; i < 30; i++) {
+                await new Promise(r => setTimeout(r, 100));
+                if (window.supabase && window.supabase.isLoaded) {
+                    console.log('[loadContactInfo] ✓ supabase 已就绪');
+                    break;
+                }
+            }
+        }
+
+        // 再次检查
         if (!window.supabase || typeof window.supabase.getAbout !== 'function') {
-            console.warn('[loadContactInfo] supabase not ready, skipping');
+            console.warn('[loadContactInfo] supabase 初始化失败, 跳过');
             return;
         }
 
