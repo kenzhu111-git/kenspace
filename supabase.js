@@ -199,7 +199,7 @@ class SimpleSupabaseClient {
 
     // 获取默认数据
     getDefaultPhotos() {
-        return [
+        return [];
             //{ id: '1', title: '城市废墟', category: 'digital', year: 2024, description: '城市中的废墟美学', thumbnail_url: 'https://cdn.hailuoai.com/matrix_agent/20260202/image_tool/output/135005_f845/workspace/desktop_media/ee918ff5-342e-49a8-9f2d-5721d9c8665b.jpg', image_url: 'https://cdn.hailuoai.com/matrix_agent/20260202/image_tool/output/135005_f845/workspace/desktop_media/ee918ff5-342e-49a8-9f2d-5721d9c8665b.jpg', is_active: true, sort_order: 1, attributes: { size: '30x40', negative_size: '35mm', other: '' } },
             //{ id: '2', title: '老街记忆', category: 'film', year: 2023, description: '胶片记录的老街风情', thumbnail_url: 'https://images.unsplash.com/photo-1519111887837-a48ccf9edc00', image_url: 'https://images.unsplash.com/photo-1519111887837-a48ccf9edc00', is_active: true, sort_order: 2, attributes: { size: '40x50', negative_size: '120', other: '限量10�? } },
             //{ id: '3', title: '静物之美', category: 'wetplate', year: 2024, description: '湿版摄影的独特质�?, thumbnail_url: 'https://images.unsplash.com/photo-1494438639946-1ebd1d20bf85', image_url: 'https://images.unsplash.com/photo-1494438639946-1ebd1d20bf85', is_active: true, sort_order: 3, attributes: { size: '20x25', negative_size: '8x10英寸', other: '古典工艺' } },
@@ -209,7 +209,7 @@ class SimpleSupabaseClient {
             //{ id: '7', title: '夜色都市', category: 'digital', year: 2024, description: '数码摄影的夜景表�?, thumbnail_url: 'https://images.unsplash.com/photo-1519501025264-65ba15a82390', image_url: 'https://images.unsplash.com/photo-1519501025264-65ba15a82390', is_active: true, sort_order: 7, attributes: { size: '60x90', negative_size: '全画�?, other: '长曝�? } },
             //{ id: '8', title: '海浪瞬间', category: 'film', year: 2023, description: '胶片捕捉的海浪瞬�?, thumbnail_url: 'https://images.unsplash.com/photo-1505118380757-91f5f5632de0', image_url: 'https://images.unsplash.com/photo-1505118380757-91f5f5632de0', is_active: true, sort_order: 8, attributes: { size: '40x50', negative_size: '120', other: '' } }
 			
-		];
+		//];
     }
 
     // 保存分类
