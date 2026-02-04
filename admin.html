@@ -1313,6 +1313,9 @@
 
         // Initialize
         document.addEventListener('DOMContentLoaded', async function() {
+            // 初始化 Supabase 客户端
+            await initSupabase();
+            
             initNavigation();
             await loadDashboard();
             await loadCategories();
