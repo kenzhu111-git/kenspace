@@ -834,7 +834,277 @@
             font-size: 13px;
             color: var(--text-secondary);
         }
-    </style>
+    
+    /* Login Overlay Styles */
+    .login-overlay {
+        position: fixed;
+        inset: 0;
+        background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        backdrop-filter: blur(10px);
+    }
+
+    .login-overlay.active {
+        display: flex;
+    }
+
+    .login-container {
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 48px 40px;
+        width: 100%;
+        max-width: 420px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        animation: slideUp 0.4s ease;
+    }
+
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .login-header {
+        text-align: center;
+        margin-bottom: 36px;
+    }
+
+    .login-header h1 {
+        font-size: 28px;
+        font-weight: 700;
+        color: #1a1a1a;
+        letter-spacing: 0.15em;
+        margin-bottom: 8px;
+    }
+
+    .login-header p {
+        font-size: 14px;
+        color: #666;
+        letter-spacing: 0.05em;
+    }
+
+    .login-form .form-group {
+        margin-bottom: 24px;
+    }
+
+    .login-form .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 13px;
+        font-weight: 500;
+        color: #333;
+        letter-spacing: 0.02em;
+    }
+
+    .login-form .form-group input {
+        width: 100%;
+        padding: 14px 16px;
+        border: 2px solid #e5e5e5;
+        border-radius: 10px;
+        font-size: 15px;
+        transition: all 0.3s ease;
+        background: #fafafa;
+    }
+
+    .login-form .form-group input:focus {
+        outline: none;
+        border-color: #1a1a1a;
+        background: #fff;
+        box-shadow: 0 0 0 4px rgba(26, 26, 26, 0.1);
+    }
+
+    .login-form .form-group input::placeholder {
+        color: #999;
+    }
+
+    .login-error {
+        background: #fff0f0;
+        border: 1px solid #ffcdd2;
+        color: #c62828;
+        padding: 12px 16px;
+        border-radius: 8px;
+        font-size: 13px;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+
+    .login-form .btn-block {
+        width: 100%;
+        padding: 16px;
+        font-size: 15px;
+        font-weight: 600;
+        border-radius: 10px;
+        margin-top: 12px;
+        transition: all 0.3s ease;
+        background: #1a1a1a;
+        color: #fff;
+        letter-spacing: 0.05em;
+    }
+
+    .login-form .btn-block:hover {
+        background: #333;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .login-form .btn-block:active {
+        transform: translateY(0);
+    }
+
+    .login-footer {
+        text-align: center;
+        margin-top: 32px;
+        padding-top: 24px;
+        border-top: 1px solid #eee;
+    }
+
+    .login-footer p {
+        font-size: 12px;
+        color: #999;
+    }
+
+    /* Admin User Info Styles */
+    .admin-user-info {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 8px 16px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+    }
+
+    .admin-user-info .username {
+        font-size: 13px;
+        color: rgba(255, 255, 255, 0.9);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .admin-user-info .logout-btn {
+        padding: 6px 14px;
+        font-size: 12px;
+        color: #fff;
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 6px;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        border: none;
+    }
+
+    .admin-user-info .logout-btn:hover {
+        background: rgba(255, 255, 255, 0.25);
+    }
+
+    /* Account Settings Modal Styles */
+    .account-modal .modal {
+        max-width: 450px;
+    }
+
+    .account-tabs {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 24px;
+        background: #f5f5f5;
+        padding: 6px;
+        border-radius: 10px;
+    }
+
+    .account-tab {
+        flex: 1;
+        padding: 12px 16px;
+        font-size: 14px;
+        font-weight: 500;
+        color: #666;
+        background: transparent;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .account-tab.active {
+        background: #fff;
+        color: #1a1a1a;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .account-tab:hover:not(.active) {
+        color: #333;
+    }
+
+    .tab-content {
+        display: none;
+    }
+
+    .tab-content.active {
+        display: block;
+    }
+
+    .current-info {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 16px;
+        margin-bottom: 20px;
+    }
+
+    .current-info .label {
+        font-size: 12px;
+        color: #999;
+        margin-bottom: 4px;
+    }
+
+    .current-info .value {
+        font-size: 15px;
+        font-weight: 500;
+        color: #1a1a1a;
+    }
+
+    .password-strength {
+        height: 4px;
+        background: #e5e5e5;
+        border-radius: 2px;
+        margin-top: 8px;
+        overflow: hidden;
+    }
+
+    .password-strength-bar {
+        height: 100%;
+        width: 0;
+        transition: all 0.3s ease;
+        border-radius: 2px;
+    }
+
+    .password-strength-bar.weak {
+        width: 33%;
+        background: #ff5252;
+    }
+
+    .password-strength-bar.medium {
+        width: 66%;
+        background: #ffc107;
+    }
+
+    .password-strength-bar.strong {
+        width: 100%;
+        background: #4caf50;
+    }
+
+    .password-hint {
+        font-size: 12px;
+        color: #999;
+        margin-top: 8px;
+    }
+
+</style>
 </head>
 <body>
     <div class="admin-container">
@@ -870,6 +1140,10 @@
                     <span>关于我</span>
                 </div>
                 <div class="nav-item" data-page="settings">
+                <div class="nav-item" data-page="account">
+                    <span class="nav-icon">👤</span>
+                    <span>账户设置</span>
+                </div>
                     <span class="nav-icon">⚙️</span>
                     <span>系统设置</span>
                 </div>
@@ -1161,6 +1435,75 @@
                     </div>
                 </div>
             </section>
+
+    <!-- Account Settings Page -->
+    <section id="page-account" class="admin-page">
+        <div class="page-header">
+            <h2>账户设置</h2>
+            <p>管理您的账户信息</p>
+        </div>
+
+        <div class="card">
+            <h3>当前账户信息</h3>
+            <div class="current-info">
+                <div class="label">用户名</div>
+                <div class="value" id="current-username">加载中...</div>
+            </div>
+            <div class="current-info">
+                <div class="label">账户角色</div>
+                <div class="value">管理员</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="account-tabs">
+                <button class="account-tab active" data-tab="username">修改用户名</button>
+                <button class="account-tab" data-tab="password">修改密码</button>
+            </div>
+
+            <!-- Username Tab -->
+            <div id="tab-username" class="tab-content active">
+                <form id="username-form">
+                    <div class="form-group">
+                        <label for="current-username-input">当前用户名</label>
+                        <input type="text" id="current-username-input" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="new-username">新用户名 *</label>
+                        <input type="text" id="new-username" required minlength="3" maxlength="20" placeholder="输入新用户名（3-20个字符）">
+                    </div>
+                    <div class="form-group">
+                        <label for="confirm-username">确认新用户名 *</label>
+                        <input type="text" id="confirm-username" required placeholder="再次输入新用户名">
+                    </div>
+                    <button type="submit" class="btn btn-primary">更新用户名</button>
+                </form>
+            </div>
+
+            <!-- Password Tab -->
+            <div id="tab-password" class="tab-content">
+                <form id="password-form">
+                    <div class="form-group">
+                        <label for="current-password">当前密码 *</label>
+                        <input type="password" id="current-password" required placeholder="输入当前密码">
+                    </div>
+                    <div class="form-group">
+                        <label for="new-password">新密码 *</label>
+                        <input type="password" id="new-password" required minlength="6" placeholder="输入新密码（至少6个字符）">
+                        <div class="password-strength">
+                            <div class="password-strength-bar" id="password-strength-bar"></div>
+                        </div>
+                        <p class="password-hint">密码强度指示器</p>
+                    </div>
+                    <div class="form-group">
+                        <label for="confirm-new-password">确认新密码 *</label>
+                        <input type="password" id="confirm-new-password" required placeholder="再次输入新密码">
+                    </div>
+                    <button type="submit" class="btn btn-primary">更新密码</button>
+                </form>
+            </div>
+        </div>
+    </section>
         </main>
     </div>
 
@@ -1302,7 +1645,215 @@
     <!-- Toast Container -->
     <div class="toast-container" id="toast-container"></div>
 
-    <script src="supabase.js"></script>
+    <!-- Login Overlay -->
+    <div id="login-overlay" class="login-overlay" style="display: none;">
+        <div class="login-container">
+            <div class="login-header">
+                <h1>PHOTOGRAPHER</h1>
+                <p>后台管理系统</p>
+            </div>
+            <form id="login-form" class="login-form">
+                <div class="form-group">
+                    <label for="login-username">用户名</label>
+                    <input type="text" id="login-username" placeholder="请输入用户名" required>
+                </div>
+                <div class="form-group">
+                    <label for="login-password">密码</label>
+                    <input type="password" id="login-password" placeholder="请输入密码" required>
+                </div>
+                <div id="login-error" class="login-error" style="display: none;"></div>
+                <button type="submit" class="btn btn-primary btn-block">登录</button>
+            </form>
+            <div class="login-footer">
+                <p>© 2026 PHOTOGRAPHER</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="supabase.js">
+
+    // ============ 账户设置 ============
+
+    function initAccountSettings() {
+        console.log('[Account] 初始化账户设置...');
+
+        // 初始化标签切换
+        document.querySelectorAll('.account-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                const tabId = this.dataset.tab;
+
+                // 切换标签状态
+                document.querySelectorAll('.account-tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+
+                // 切换内容
+                document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                document.getElementById('tab-' + tabId)?.classList.add('active');
+            });
+        });
+
+        // 初始化用户名表单
+        const usernameForm = document.getElementById('username-form');
+        if (usernameForm) {
+            usernameForm.addEventListener('submit', handleUsernameChange);
+        }
+
+        // 初始化密码表单
+        const passwordForm = document.getElementById('password-form');
+        if (passwordForm) {
+            passwordForm.addEventListener('submit', handlePasswordChange);
+            // 密码强度检测
+            const newPasswordInput = document.getElementById('new-password');
+            if (newPasswordInput) {
+                newPasswordInput.addEventListener('input', function() {
+                    updatePasswordStrength(this.value);
+                });
+            }
+        }
+
+        // 加载当前用户名
+        loadCurrentUsername();
+    }
+
+    async function loadCurrentUsername() {
+        try {
+            const { users } = await window.supabase.getUsers();
+            if (users && users.length > 0) {
+                const username = users[0].username;
+                document.getElementById('current-username').textContent = username;
+                document.getElementById('current-username-input').value = username;
+            }
+        } catch (error) {
+            console.error('[Account] 加载用户名失败:', error);
+        }
+    }
+
+    function updatePasswordStrength(password) {
+        const strengthBar = document.getElementById('password-strength-bar');
+        if (!strengthBar) return;
+
+        let strength = 0;
+
+        if (password.length >= 6) strength += 1;
+        if (password.length >= 10) strength += 1;
+        if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength += 1;
+        if (/[0-9]/.test(password)) strength += 1;
+        if (/[^a-zA-Z0-9]/.test(password)) strength += 1;
+
+        strengthBar.className = 'password-strength-bar';
+        if (strength <= 2) {
+            strengthBar.classList.add('weak');
+        } else if (strength <= 4) {
+            strengthBar.classList.add('medium');
+        } else {
+            strengthBar.classList.add('strong');
+        }
+    }
+
+    async function handleUsernameChange(event) {
+        event.preventDefault();
+
+        const newUsername = document.getElementById('new-username').value.trim();
+        const confirmUsername = document.getElementById('confirm-username').value.trim();
+
+        // 验证输入
+        if (!newUsername || newUsername.length < 3) {
+            showToast('用户名至少需要3个字符', 'error');
+            return;
+        }
+
+        if (newUsername !== confirmUsername) {
+            showToast('两次输入的用户名不一致', 'error');
+            return;
+        }
+
+        // 获取当前用户名
+        const { users } = await window.supabase.getUsers();
+        if (users && users.length > 0 && users[0].username === newUsername) {
+            showToast('新用户名与当前用户名相同', 'error');
+            return;
+        }
+
+        try {
+            // 更新用户名（不需要当前密码验证，因为只有管理员自己使用）
+            const result = await window.supabase.updateUser({ username: newUsername });
+
+            if (result.error) {
+                showToast(result.error.message, 'error');
+                return;
+            }
+
+            showToast('用户名已成功更新！', 'success');
+
+            // 重置表单
+            document.getElementById('username-form').reset();
+
+            // 更新显示的用户名
+            loadCurrentUsername();
+        } catch (error) {
+            console.error('[Account] 更新用户名失败:', error);
+            showToast('更新失败，请稍后重试', 'error');
+        }
+    }
+
+    async function handlePasswordChange(event) {
+        event.preventDefault();
+
+        const currentPassword = document.getElementById('current-password').value;
+        const newPassword = document.getElementById('new-password').value;
+        const confirmNewPassword = document.getElementById('confirm-new-password').value;
+
+        // 验证输入
+        if (!currentPassword) {
+            showToast('请输入当前密码', 'error');
+            return;
+        }
+
+        if (!newPassword || newPassword.length < 6) {
+            showToast('新密码至少需要6个字符', 'error');
+            return;
+        }
+
+        if (newPassword !== confirmNewPassword) {
+            showToast('两次输入的密码不一致', 'error');
+            return;
+        }
+
+        // 验证当前密码
+        const isValid = await window.supabase.verifyPassword(currentPassword);
+        if (!isValid) {
+            showToast('当前密码不正确', 'error');
+            return;
+        }
+
+        // 不能与当前密码相同
+        if (currentPassword === newPassword) {
+            showToast('新密码不能与当前密码相同', 'error');
+            return;
+        }
+
+        try {
+            const result = await window.supabase.updateUser({
+                password: currentPassword,
+                new_password: newPassword
+            });
+
+            if (result.error) {
+                showToast(result.error.message, 'error');
+                return;
+            }
+
+            showToast('密码已成功更新！', 'success');
+
+            // 重置表单
+            document.getElementById('password-form').reset();
+            updatePasswordStrength('');
+        } catch (error) {
+            console.error('[Account] 更新密码失败:', error);
+            showToast('更新失败，请稍后重试', 'error');
+        }
+    }
+</script>
     <script>
         // Global State
         let currentPage = 'dashboard';
@@ -1310,12 +1861,141 @@
         let attributes = [];
         let deleteTarget = { type: '', id: '', message: '' };
         let photoCategoryCounts = {};
+        let isLoggedIn = false;
 
-        // Initialize
-        document.addEventListener('DOMContentLoaded', async function() {
-            // 初始化 Supabase 客户端
-            await initSupabase();
+        // ============ Authentication ============
+
+        async function checkAuth() {
+            console.log('[Auth] 检查登录状态...');
             
+            try {
+                const { authenticated, session } = await window.supabase.checkSession();
+                
+                if (authenticated) {
+                    console.log('[Auth] 已登录:', session.username);
+                    return { authenticated: true, session };
+                } else {
+                    console.log('[Auth] 未登录');
+                    return { authenticated: false, session: null };
+                }
+            } catch (error) {
+                console.error('[Auth] 检查登录状态失败:', error);
+                return { authenticated: false, session: null };
+            }
+        }
+
+        async function doLogin(username, password) {
+            console.log('[Auth] 尝试登录:', username);
+            
+            const { error, data} = await window.supabase.login(username, password);
+            
+            if (error) {
+                console.error('[Auth] 登录失败:', error.message);
+                return { success: false, error: error.message };
+            }
+            
+            console.log('[Auth] 登录成功:', data.username);
+            return { success: true, data };
+        }
+
+        async function doLogout() {
+            console.log('[Auth] 退出登录');
+            await window.supabase.logout();
+        }
+
+        function showLoginPage() {
+            const overlay = document.getElementById('login-overlay');
+            if (overlay) {
+                overlay.style.display = 'flex';
+            }
+            
+            // 隐藏管理页面
+            const adminContainer = document.querySelector('.admin-container');
+            if (adminContainer) {
+                adminContainer.style.display = 'none';
+            }
+        }
+
+        function hideLoginPage() {
+            const overlay = document.getElementById('login-overlay');
+            if (overlay) {
+                overlay.style.display = 'none';
+            }
+            
+            // 显示管理页面
+            const adminContainer = document.querySelector('.admin-container');
+            if (adminContainer) {
+                adminContainer.style.display = 'flex';
+            }
+        }
+
+        function showAdminUserInfo(username) {
+            const navbar = document.querySelector('.nav-container');
+            if (!navbar) return;
+            
+            // 移除已存在的用户信息
+            const existing = navbar.querySelector('.admin-user-info');
+            if (existing) {
+                existing.remove();
+            }
+            
+            // 创建用户信息元素
+            const userInfo = document.createElement('div');
+            userInfo.className = 'admin-user-info';
+            userInfo.innerHTML = `
+                <span class="username">👤 ${username}</span>
+                <button class="logout-btn" onclick="handleLogout()">退出</button>
+            `;
+            
+            navbar.appendChild(userInfo);
+        }
+
+        async function handleLogin(event) {
+            event.preventDefault();
+            
+            const username = document.getElementById('login-username').value.trim();
+            const password = document.getElementById('login-password').value;
+            const errorEl = document.getElementById('login-error');
+            
+            if (!username || !password) {
+                errorEl.textContent = '请输入用户名和密码';
+                errorEl.style.display = 'block';
+                return;
+            }
+            
+            const result = await doLogin(username, password);
+            
+            if (result.success) {
+                errorEl.style.display = 'none';
+                hideLoginPage();
+                showAdminUserInfo(result.data.username);
+                showToast('登录成功，欢迎回来！', 'success');
+                
+                // 初始化管理页面
+                await initAdminPage();
+            } else {
+                errorEl.textContent = result.error;
+                errorEl.style.display = 'block';
+            }
+        }
+
+        async function handleLogout() {
+            await doLogout();
+            
+            // 移除用户信息
+            const userInfo = document.querySelector('.admin-user-info');
+            if (userInfo) {
+                userInfo.remove();
+            }
+            
+            showLoginPage();
+            showToast('已退出登录', 'success');
+        }
+
+        async function initAdminPage() {
+            // 初始化账户设置
+            initAccountSettings();
+            // 初始化各个模块
             initNavigation();
             await loadDashboard();
             await loadCategories();
@@ -1330,6 +2010,33 @@
             initPhotoForm();
             initAboutForm();
             initAvatarPreview();
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('[Init] 后台管理系统启动...');
+            
+            // 初始化 Supabase
+            await initSupabase();
+            
+            // 检查登录状态
+            const { authenticated, session } = await checkAuth();
+            
+            if (authenticated) {
+                console.log('[Init] 用户已登录，显示管理页面');
+                hideLoginPage();
+                showAdminUserInfo(session.username);
+                await initAdminPage();
+            } else {
+                console.log('[Init] 用户未登录，显示登录页面');
+                showLoginPage();
+            }
+            
+            // 绑定登录表单
+            const loginForm = document.getElementById('login-form');
+            if (loginForm) {
+                loginForm.addEventListener('submit', handleLogin);
+            }
         });
 
         // Navigation
@@ -1546,7 +2253,7 @@
                     // Upload full image to Supabase Storage
                     progressText.textContent = '上传原图...';
                     progressFill.style.width = '30%';
-                    const uploadResult = await window.supabase.uploadPhoto(file);
+                    const uploadResult = await window.supabase.uploadAndCompress(file, 'photos', 'photo');
 
                     if (uploadResult.error) {
                         throw new Error('上传原图失败: ' + uploadResult.error.message);
@@ -2432,14 +3139,12 @@ async function confirmDeleteCategory(id) {
                                 <input type="text" class="banner-description" value="${banner.description || ''}" placeholder="输入描述">
                             </div>
                             <div class="form-group">
-                                <label>图片 URL 或上传</label>
-                                <div style="display: flex; gap: 10px; align-items: center;">
-                                    <input type="text" class="banner-url" value="${banner.image_url}" placeholder="图片 URL" style="flex: 1;">
-                                    <input type="file" class="banner-upload" accept="image/*" style="width: 120px;">
-                                </div>
+                                <label>图片上传（选择文件后自动保存）</label>
+                                <input type="file" class="banner-upload" accept="image/*" style="width: 100%;">
+                                <input type="hidden" class="banner-url" value="${banner.image_url}">
+                                <small style="color: #666;">选择图片后会自动上传并更新，无需手动保存</small>
                             </div>
                             <div style="display: flex; gap: 10px;">
-                                <button class="btn btn-sm btn-primary" onclick="saveSingleBanner(${index})">保存</button>
                                 <button class="btn btn-sm btn-danger" onclick="deleteBanner(${index})">删除</button>
                             </div>
                         </div>
@@ -2464,28 +3169,73 @@ async function confirmDeleteCategory(id) {
                     const file = e.target.files[0];
                     if (!file) return;
 
+                    // 获取 bannerItem（在事件处理函数顶部定义）
+                    const bannerItem = input.closest('.banner-item');
+                    if (!bannerItem) {
+                        console.error('[Banner] 未找到 bannerItem 元素');
+                        showToast('错误：未找到Banner元素', 'error');
+                        return;
+                    }
+
                     // 显示本地预览
                     const reader = new FileReader();
-reader.onload = function(e) {
-                        const bannerItem = input.closest('.banner-item');
-                        const previewImg = bannerItem.querySelector('.banner-preview img');
-                        previewImg.src = e.target.result;
+                    reader.onload = function(e) {
+const previewImg = bannerItem.querySelector('.banner-preview img');
+                        if (previewImg) {
+                            previewImg.src = e.target.result;
+                        }
                     };
                     reader.readAsDataURL(file);
 
-                    // 自动上传到 Supabase
+                    // 自动上传到 Supabase 并保存
                     try {
-                        const result = await window.supabase.uploadBanner(file);
+                        console.log('[Banner] 开始上传文件:', file.name);
+                        const result = await window.supabase.uploadAndCompress(file, 'banners', 'banner');
+                        
                         if (result.error) {
+                            console.error('[Banner] 上传失败:', result.error);
                             showToast('上传失败: ' + result.error.message, 'error');
                             return;
                         }
 
-                        // 更新 URL 输入框
+                        console.log('[Banner] 上传成功:', result.data.path);
+
+                        // 更新隐藏的URL字段
                         const urlInput = bannerItem.querySelector('.banner-url');
-                        urlInput.value = result.data.path;
-                        showToast('图片已上传', 'success');
+                        if (urlInput) {
+                            urlInput.value = result.data.path;
+                        }
+
+                        // 更新预览图
+                        const previewImg = bannerItem.querySelector('.banner-preview img');
+                        if (previewImg) {
+                            previewImg.src = result.data.path;
+                        }
+
+                        // 立即保存到数据库
+                        const { data: banners } = await window.supabase.getBanners();
+                        const bannerIndex = Array.from(container.querySelectorAll('.banner-item')).indexOf(bannerItem);
+                        
+                        if (bannerIndex >= 0 && bannerIndex < banners.length) {
+                            banners[bannerIndex] = {
+                                ...banners[bannerIndex],
+                                image_url: result.data.path
+                            };
+
+                            const { error: saveError } = await window.supabase.saveBanners(banners);
+                            if (saveError) {
+                                showToast('保存失败: ' + saveError.message, 'error');
+                                return;
+                            }
+
+                            console.log('[Banner] 已自动保存');
+                            showToast('✅ 图片已上传并保存', 'success');
+                        } else {
+                            console.error('[Banner] 无效的 bannerIndex:', bannerIndex);
+                            showToast('保存失败：无效的Banner索引', 'error');
+                        }
                     } catch (error) {
+                        console.error('[Banner] 上传异常:', error);
                         showToast('上传失败: ' + error.message, 'error');
                     }
                 });
@@ -2653,6 +3403,189 @@ reader.onload = function(e) {
                 await loadBanners();
             });
         }
-    </script>
+    
+
+    // ============ 账户设置 ============
+
+    function initAccountSettings() {
+        console.log('[Account] 初始化账户设置...');
+
+        // 初始化标签切换
+        document.querySelectorAll('.account-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                const tabId = this.dataset.tab;
+
+                // 切换标签状态
+                document.querySelectorAll('.account-tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+
+                // 切换内容
+                document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                document.getElementById('tab-' + tabId)?.classList.add('active');
+            });
+        });
+
+        // 初始化用户名表单
+        const usernameForm = document.getElementById('username-form');
+        if (usernameForm) {
+            usernameForm.addEventListener('submit', handleUsernameChange);
+        }
+
+        // 初始化密码表单
+        const passwordForm = document.getElementById('password-form');
+        if (passwordForm) {
+            passwordForm.addEventListener('submit', handlePasswordChange);
+            // 密码强度检测
+            const newPasswordInput = document.getElementById('new-password');
+            if (newPasswordInput) {
+                newPasswordInput.addEventListener('input', function() {
+                    updatePasswordStrength(this.value);
+                });
+            }
+        }
+
+        // 加载当前用户名
+        loadCurrentUsername();
+    }
+
+    async function loadCurrentUsername() {
+        try {
+            const { users } = await window.supabase.getUsers();
+            if (users && users.length > 0) {
+                const username = users[0].username;
+                document.getElementById('current-username').textContent = username;
+                document.getElementById('current-username-input').value = username;
+            }
+        } catch (error) {
+            console.error('[Account] 加载用户名失败:', error);
+        }
+    }
+
+    function updatePasswordStrength(password) {
+        const strengthBar = document.getElementById('password-strength-bar');
+        if (!strengthBar) return;
+
+        let strength = 0;
+
+        if (password.length >= 6) strength += 1;
+        if (password.length >= 10) strength += 1;
+        if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength += 1;
+        if (/[0-9]/.test(password)) strength += 1;
+        if (/[^a-zA-Z0-9]/.test(password)) strength += 1;
+
+        strengthBar.className = 'password-strength-bar';
+        if (strength <= 2) {
+            strengthBar.classList.add('weak');
+        } else if (strength <= 4) {
+            strengthBar.classList.add('medium');
+        } else {
+            strengthBar.classList.add('strong');
+        }
+    }
+
+    async function handleUsernameChange(event) {
+        event.preventDefault();
+
+        const newUsername = document.getElementById('new-username').value.trim();
+        const confirmUsername = document.getElementById('confirm-username').value.trim();
+
+        // 验证输入
+        if (!newUsername || newUsername.length < 3) {
+            showToast('用户名至少需要3个字符', 'error');
+            return;
+        }
+
+        if (newUsername !== confirmUsername) {
+            showToast('两次输入的用户名不一致', 'error');
+            return;
+        }
+
+        // 获取当前用户名
+        const { users } = await window.supabase.getUsers();
+        if (users && users.length > 0 && users[0].username === newUsername) {
+            showToast('新用户名与当前用户名相同', 'error');
+            return;
+        }
+
+        try {
+            // 更新用户名（不需要当前密码验证，因为只有管理员自己使用）
+            const result = await window.supabase.updateUser({ username: newUsername });
+
+            if (result.error) {
+                showToast(result.error.message, 'error');
+                return;
+            }
+
+            showToast('用户名已成功更新！', 'success');
+
+            // 重置表单
+            document.getElementById('username-form').reset();
+
+            // 更新显示的用户名
+            loadCurrentUsername();
+        } catch (error) {
+            console.error('[Account] 更新用户名失败:', error);
+            showToast('更新失败，请稍后重试', 'error');
+        }
+    }
+
+    async function handlePasswordChange(event) {
+        event.preventDefault();
+
+        const currentPassword = document.getElementById('current-password').value;
+        const newPassword = document.getElementById('new-password').value;
+        const confirmNewPassword = document.getElementById('confirm-new-password').value;
+
+        // 验证输入
+        if (!currentPassword) {
+            showToast('请输入当前密码', 'error');
+            return;
+        }
+
+        if (!newPassword || newPassword.length < 6) {
+            showToast('新密码至少需要6个字符', 'error');
+            return;
+        }
+
+        if (newPassword !== confirmNewPassword) {
+            showToast('两次输入的密码不一致', 'error');
+            return;
+        }
+
+        // 验证当前密码
+        const isValid = await window.supabase.verifyPassword(currentPassword);
+        if (!isValid) {
+            showToast('当前密码不正确', 'error');
+            return;
+        }
+
+        // 不能与当前密码相同
+        if (currentPassword === newPassword) {
+            showToast('新密码不能与当前密码相同', 'error');
+            return;
+        }
+
+        try {
+            const result = await window.supabase.updateUser({
+                password: currentPassword,
+                new_password: newPassword
+            });
+
+            if (result.error) {
+                showToast(result.error.message, 'error');
+                return;
+            }
+
+            showToast('密码已成功更新！', 'success');
+
+            // 重置表单
+            document.getElementById('password-form').reset();
+            updatePasswordStrength('');
+        } catch (error) {
+            console.error('[Account] 更新密码失败:', error);
+            showToast('更新失败，请稍后重试', 'error');
+        }
+    }
+</script>
 </body>
 </html>
