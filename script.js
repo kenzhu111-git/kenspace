@@ -5,8 +5,21 @@
 
 // DOM 加载完成后执行
 document.addEventListener('DOMContentLoaded', async function() {
+    console.log('========================================');
+    console.log('[INIT] DOMContentLoaded 开始执行');
+    console.log('[INIT] 时间:', new Date().toISOString());
+    
     // 初始化 Supabase 客户端
-    await initSupabase();
+    console.log('[INIT] 开始调用 initSupabase()...');
+    try {
+        await initSupabase();
+        console.log('[INIT] ✓ initSupabase() 执行完成');
+        console.log('[INIT] window.supabase:', window.supabase ? '已定义' : '未定义');
+        console.log('[INIT] window.supabase.isLoaded:', window.supabase?.isLoaded);
+    } catch (error) {
+        console.error('[INIT] ✗ initSupabase() 执行失败:', error.message);
+        console.error('[INIT] 错误堆栈:', error.stack);
+    }
     
     // 初始化各个模块
     initNavigation();
@@ -666,9 +679,11 @@ async function loadAboutInfo() {
         // 等待 supabase 初始化完成
         if (!window.supabase || !window.supabase.isLoaded) {
             console.log('[loadAboutInfo] 等待 supabase 初始化...');
-            // 最多等待 3 秒
-            for (let i = 0; i < 30; i++) {
+            // 最多等待 5 秒
+            for (let i = 0; i < 50; i++) {
                 await new Promise(r => setTimeout(r, 100));
+                console.log('[loadAboutInfo] 检查 #' + (i+1) + ': window.supabase=' + 
+                           (window.supabase ? '已定义, isLoaded=' + window.supabase.isLoaded : '未定义'));
                 if (window.supabase && window.supabase.isLoaded) {
                     console.log('[loadAboutInfo] ✓ supabase 已就绪');
                     break;
@@ -827,9 +842,11 @@ async function loadContactInfo() {
         // 等待 supabase 初始化完成
         if (!window.supabase || !window.supabase.isLoaded) {
             console.log('[loadContactInfo] 等待 supabase 初始化...');
-            // 最多等待 3 秒
-            for (let i = 0; i < 30; i++) {
+            // 最多等待 5 秒
+            for (let i = 0; i < 50; i++) {
                 await new Promise(r => setTimeout(r, 100));
+                console.log('[loadContactInfo] 检查 #' + (i+1) + ': window.supabase=' + 
+                           (window.supabase ? '已定义, isLoaded=' + window.supabase.isLoaded : '未定义'));
                 if (window.supabase && window.supabase.isLoaded) {
                     console.log('[loadContactInfo] ✓ supabase 已就绪');
                     break;
