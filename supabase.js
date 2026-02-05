@@ -580,8 +580,11 @@ this.photos = JSON.parse(localPhotos);
                 return { error: { message: '新密码长度至少6个字符' } };
             }
 
+            // 更新this.users数组
+            this.users = [userData];
+
             // 保存用户数据
-            const saveResult = await this.saveUsers([userData]);
+            const saveResult = await this.saveUsers();
             if (saveResult.error) {
                 return { error: saveResult.error };
             }
