@@ -101,6 +101,7 @@ class SimpleSupabaseClient {
             }
 
             await this.loadPhotos();
+            await this.loadAbout();
             this.isLoaded = true;
             console.log('[loadAll] 数据加载完成');
         } catch (error) {
@@ -124,20 +125,51 @@ this.photos = JSON.parse(localPhotos);
             return { data: this.photos, count: this.photos.length, error: error.message };
         }
     }
+    
+    async loadAbout() {
+        try {
+            const localAbout = localStorage.getItem('about');
+            if (localAbout) {
+                this.about = JSON.parse(localAbout);
+            } else {
+                this.about = this.getDefaultAbout();
+                this.saveAbout();
+            }
+            return { data: this.about, error: null };
+        } catch (error) {
+            this.about = this.getDefaultAbout();
+            this.saveAbout();
+            return { data: this.about, error: error.message };
+        }
+    }
 
     initializeDefaults() {
         this.categories = [...DEFAULT_CATEGORIES];
         this.attributes = [...DEFAULT_ATTRIBUTES];
         this.photos = this.getDefaultPhotos();
+        this.about = this.getDefaultAbout();
         this.saveCategories();
         this.saveAttributes();
         this.savePhotos();
+        this.saveAbout();
         this.isLoaded = true;
     }
 
     // 获取默认数据 - 返回空数组
     getDefaultPhotos() {
         return [];
+    }
+    
+    // 获取默认关于数据
+    getDefaultAbout() {
+        return {
+            name: 'PHOTOGRAPHER',
+            title: '我是一名专注于极简主义摄影的摄影师',
+            bio: '在我的镜头下，我试图捕捉那些被忽视的美好瞬间——光影的交错、空间的静谧、以及生活中转瞬即逝的诗意。',
+            avatar_url: '',
+            contact: '',
+            social_links: {}
+        };
     }
 
     async saveCategories() {
@@ -161,6 +193,15 @@ this.photos = JSON.parse(localPhotos);
     async savePhotos() {
         try {
             localStorage.setItem('photos', JSON.stringify(this.photos));
+            return { success: true };
+        } catch (error) {
+            return { success: false, error: error.message };
+        }
+    }
+    
+    async saveAbout() {
+        try {
+            localStorage.setItem('about', JSON.stringify(this.about));
             return { success: true };
         } catch (error) {
             return { success: false, error: error.message };
@@ -293,6 +334,18 @@ this.photos = JSON.parse(localPhotos);
         return { data: [{ id }], error: null };
     }
 
+    async getAbout() {
+        if (!this.isLoaded) await this.loadAll();
+        return { data: this.about, error: null };
+    }
+    
+    async updateAbout(updates) {
+        if (!this.isLoaded) await this.loadAll();
+        this.about = { ...this.about, ...updates };
+        await this.saveAbout();
+        return { data: [this.about], error: null };
+    }
+    
     async getPhoto(id) {
         if (!this.isLoaded) await this.loadAll();
         const photo = this.photos.find(p => p.id === id);
