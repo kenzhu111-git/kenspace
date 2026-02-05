@@ -1786,11 +1786,16 @@
 
     async function loadCurrentUsername() {
         try {
-            const { users } = await window.supabase.getUsers();
-            if (users && users.length > 0) {
-                const username = users[0].username;
-                document.getElementById('current-username').textContent = username;
-                document.getElementById('current-username-input').value = username;
+            // 从 localStorage 直接读取用户配置
+            const userConfig = localStorage.getItem('admin_user_config');
+            if (userConfig) {
+                const config = JSON.parse(userConfig);
+                document.getElementById('current-username').textContent = config.username;
+                document.getElementById('current-username-input').value = config.username;
+            } else {
+                // 默认用户名
+                document.getElementById('current-username').textContent = 'admin';
+                document.getElementById('current-username-input').value = 'admin';
             }
         } catch (error) {
             console.error('[Account] 加载用户名失败:', error);
@@ -1837,20 +1842,21 @@
         }
 
         // 获取当前用户名
-        const { users } = await window.supabase.getUsers();
-        if (users && users.length > 0 && users[0].username === newUsername) {
+        const userConfig = localStorage.getItem('admin_user_config');
+        const currentConfig = userConfig ? JSON.parse(userConfig) : { username: 'admin' };
+        
+        if (currentConfig.username === newUsername) {
             showToast('新用户名与当前用户名相同', 'error');
             return;
         }
 
         try {
-            // 更新用户名（不需要当前密码验证，因为只有管理员自己使用）
-            const result = await window.supabase.updateUser({ username: newUsername });
-
-            if (result.error) {
-                showToast(result.error.message, 'error');
-                return;
-            }
+            // 直接更新 localStorage 中的用户配置
+            const newConfig = {
+                ...currentConfig,
+                username: newUsername
+            };
+            localStorage.setItem('admin_user_config', JSON.stringify(newConfig));
 
             showToast('用户名已成功更新！', 'success');
 
@@ -1888,29 +1894,35 @@
             return;
         }
 
+        // 获取当前密码配置
+        const userConfig = localStorage.getItem('admin_user_config');
+        const currentConfig = userConfig ? JSON.parse(userConfig) : { password_hash: '' };
+        
+        // 计算当前输入密码的哈希
+        const inputHash = window.supabase.hashPassword(currentPassword);
+        
         // 验证当前密码
-        const isValid = await window.supabase.verifyPassword(currentPassword);
-        if (!isValid) {
+        if (currentConfig.password_hash && inputHash !== currentConfig.password_hash) {
             showToast('当前密码不正确', 'error');
             return;
         }
 
         // 不能与当前密码相同
-        if (currentPassword === newPassword) {
+        if (currentConfig.password_hash && inputHash === window.supabase.hashPassword(newPassword)) {
             showToast('新密码不能与当前密码相同', 'error');
             return;
         }
 
         try {
-            const result = await window.supabase.updateUser({
-                password: currentPassword,
-                new_password: newPassword
-            });
-
-            if (result.error) {
-                showToast(result.error.message, 'error');
-                return;
-            }
+            // 计算新密码的哈希
+            const newPasswordHash = window.supabase.hashPassword(newPassword);
+            
+            // 更新 localStorage 中的用户配置
+            const newConfig = {
+                ...currentConfig,
+                password_hash: newPasswordHash
+            };
+            localStorage.setItem('admin_user_config', JSON.stringify(newConfig));
 
             showToast('密码已成功更新！', 'success');
 
@@ -1949,6 +1961,13 @@
                 }
             } catch (error) {
                 console.error('[Auth] 检查登录状态失败:', error);
+                // 检查是否有自定义配置，如果有则允许访问
+                const userConfig = localStorage.getItem('admin_user_config');
+                if (userConfig) {
+                    console.log('[Auth] 检测到自定义配置，允许访问');
+                    const config = JSON.parse(userConfig);
+                    return { authenticated: true, session: { username: config.username } };
+                }
                 return { authenticated: false, session: null };
             }
         }
@@ -1956,15 +1975,25 @@
         async function doLogin(username, password) {
             console.log('[Auth] 尝试登录:', username);
             
-            const { error, data} = await window.supabase.login(username, password);
+            // 检查是否有自定义配置
+            const userConfig = localStorage.getItem('admin_user_config');
+            const config = userConfig ? JSON.parse(userConfig) : null;
             
-            if (error) {
-                console.error('[Auth] 登录失败:', error.message);
-                return { success: false, error: error.message };
+            // 默认密码
+            const defaultHash = window.supabase.hashPassword('admin123');
+            const inputHash = window.supabase.hashPassword(password);
+            
+            // 验证用户名和密码
+            const validUsername = config ? config.username : 'admin';
+            const validHash = config && config.password_hash ? config.password_hash : defaultHash;
+            
+            if (username === validUsername && inputHash === validHash) {
+                console.log('[Auth] 登录成功:', username);
+                return { success: true, data: { username: validUsername } };
+            } else {
+                console.error('[Auth] 登录失败: 用户名或密码错误');
+                return { success: false, error: '用户名或密码错误' };
             }
-            
-            console.log('[Auth] 登录成功:', data.username);
-            return { success: true, data };
         }
 
         async function doLogout() {
@@ -3519,11 +3548,16 @@ const previewImg = bannerItem.querySelector('.banner-preview img');
 
     async function loadCurrentUsername() {
         try {
-            const { users } = await window.supabase.getUsers();
-            if (users && users.length > 0) {
-                const username = users[0].username;
-                document.getElementById('current-username').textContent = username;
-                document.getElementById('current-username-input').value = username;
+            // 从 localStorage 直接读取用户配置
+            const userConfig = localStorage.getItem('admin_user_config');
+            if (userConfig) {
+                const config = JSON.parse(userConfig);
+                document.getElementById('current-username').textContent = config.username;
+                document.getElementById('current-username-input').value = config.username;
+            } else {
+                // 默认用户名
+                document.getElementById('current-username').textContent = 'admin';
+                document.getElementById('current-username-input').value = 'admin';
             }
         } catch (error) {
             console.error('[Account] 加载用户名失败:', error);
@@ -3570,20 +3604,21 @@ const previewImg = bannerItem.querySelector('.banner-preview img');
         }
 
         // 获取当前用户名
-        const { users } = await window.supabase.getUsers();
-        if (users && users.length > 0 && users[0].username === newUsername) {
+        const userConfig = localStorage.getItem('admin_user_config');
+        const currentConfig = userConfig ? JSON.parse(userConfig) : { username: 'admin' };
+        
+        if (currentConfig.username === newUsername) {
             showToast('新用户名与当前用户名相同', 'error');
             return;
         }
 
         try {
-            // 更新用户名（不需要当前密码验证，因为只有管理员自己使用）
-            const result = await window.supabase.updateUser({ username: newUsername });
-
-            if (result.error) {
-                showToast(result.error.message, 'error');
-                return;
-            }
+            // 直接更新 localStorage 中的用户配置
+            const newConfig = {
+                ...currentConfig,
+                username: newUsername
+            };
+            localStorage.setItem('admin_user_config', JSON.stringify(newConfig));
 
             showToast('用户名已成功更新！', 'success');
 
@@ -3621,29 +3656,35 @@ const previewImg = bannerItem.querySelector('.banner-preview img');
             return;
         }
 
+        // 获取当前密码配置
+        const userConfig = localStorage.getItem('admin_user_config');
+        const currentConfig = userConfig ? JSON.parse(userConfig) : { password_hash: '' };
+        
+        // 计算当前输入密码的哈希
+        const inputHash = window.supabase.hashPassword(currentPassword);
+        
         // 验证当前密码
-        const isValid = await window.supabase.verifyPassword(currentPassword);
-        if (!isValid) {
+        if (currentConfig.password_hash && inputHash !== currentConfig.password_hash) {
             showToast('当前密码不正确', 'error');
             return;
         }
 
         // 不能与当前密码相同
-        if (currentPassword === newPassword) {
+        if (currentConfig.password_hash && inputHash === window.supabase.hashPassword(newPassword)) {
             showToast('新密码不能与当前密码相同', 'error');
             return;
         }
 
         try {
-            const result = await window.supabase.updateUser({
-                password: currentPassword,
-                new_password: newPassword
-            });
-
-            if (result.error) {
-                showToast(result.error.message, 'error');
-                return;
-            }
+            // 计算新密码的哈希
+            const newPasswordHash = window.supabase.hashPassword(newPassword);
+            
+            // 更新 localStorage 中的用户配置
+            const newConfig = {
+                ...currentConfig,
+                password_hash: newPasswordHash
+            };
+            localStorage.setItem('admin_user_config', JSON.stringify(newConfig));
 
             showToast('密码已成功更新！', 'success');
 
