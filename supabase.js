@@ -188,6 +188,12 @@ this.photos = JSON.parse(localPhotos);
         }
     }
 
+    // 获取用户列表
+    async getUsers() {
+        if (!this.isLoaded) await this.loadAll();
+        return { users: this.users, error: null };
+    }
+
     initializeDefaults() {
         this.categories = [...DEFAULT_CATEGORIES];
         this.attributes = [...DEFAULT_ATTRIBUTES];
