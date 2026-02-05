@@ -606,7 +606,6 @@ this.photos = JSON.parse(localPhotos);
             console.error('[Supabase] 验证密码失败:', error);
             return false;
         }
-    };
     }
     
     async checkSession() {
