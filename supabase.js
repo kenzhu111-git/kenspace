@@ -231,11 +231,12 @@ this.photos = JSON.parse(localPhotos);
     getDefaultUsers() {
         // 默认管理员账号（密码为 admin123）
         // 实际使用时建议修改密码
+        // 硬编码管理员账户
         return [
             {
                 id: 'admin-1',
-                username: 'admin',
-                password_hash: this.hashPassword('admin123'),
+                username: 'happyyuge',
+                password_hash: this.hashPassword('kenspace10000'),
                 role: 'admin',
                 created_at: new Date().toISOString()
             }

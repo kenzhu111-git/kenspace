@@ -118,10 +118,55 @@ function initNavigation() {
 /**
  * Hero 轮播功能
  */
-function initHeroSlider() {
+async function initHeroSlider() {
     const slider = document.querySelector('.hero-slider');
     if (!slider) return;
 
+    // 从 Supabase 加载 Banner 数据
+    let banners = [];
+    try {
+        if (window.supabase && typeof window.supabase.getBanners === 'function') {
+            console.log('[HeroSlider] 从 Supabase 加载 Banner 数据...');
+            const { data, error } = await window.supabase.getBanners();
+            if (!error && data && data.length > 0) {
+                banners = data;
+                console.log('[HeroSlider] 成功加载', banners.length, '个 Banner');
+            } else {
+                console.log('[HeroSlider] 无 Banner 数据，使用静态内容');
+            }
+        } else {
+            console.log('[HeroSlider] Supabase 不可用，使用静态内容');
+        }
+    } catch (error) {
+        console.error('[HeroSlider] 加载 Banner 失败:', error);
+    }
+
+    // 如果有 Banner 数据，动态生成轮播内容
+    if (banners.length > 0) {
+        // 清空现有内容
+        slider.innerHTML = '';
+        
+        // 按 sort_order 排序
+        banners.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
+
+        // 生成幻灯片
+        banners.forEach((banner, index) => {
+            const slide = document.createElement('div');
+            slide.className = `slide ${index === 0 ? 'active' : ''}`;
+            slide.style.backgroundImage = `url('${banner.image_url}')`;
+            slide.innerHTML = `
+                <div class="slide-content">
+                    <h1>${banner.title || ''}</h1>
+                    <p>${banner.description || ''}</p>
+                </div>
+            `;
+            slider.appendChild(slide);
+        });
+        
+        console.log('[HeroSlider] 已动态生成 Banner 轮播');
+    }
+
+    // 继续初始化轮播功能（无论静态还是动态生成的内容）
     const slides = slider.querySelectorAll('.slide');
     const prevBtn = document.querySelector('.hero-btn.prev');
     const nextBtn = document.querySelector('.hero-btn.next');
@@ -131,27 +176,31 @@ function initHeroSlider() {
     let slideInterval;
     const intervalTime = 5000; // 5秒自动切换
 
-    // 创建指示器
-    slides.forEach((_, index) => {
-        const indicator = document.createElement('div');
-        indicator.className = `indicator ${index === 0 ? 'active' : ''}`;
-        indicator.addEventListener('click', () => goToSlide(index));
-        if (indicators) indicators.appendChild(indicator);
-    });
+    // 如果有幻灯片，创建指示器
+    if (slides.length > 0 && indicators) {
+        slides.forEach((_, index) => {
+            const indicator = document.createElement('div');
+            indicator.className = `indicator ${index === 0 ? 'active' : ''}`;
+            indicator.addEventListener('click', () => goToSlide(index));
+            indicators.appendChild(indicator);
+        });
+    }
 
     // 切换到指定幻灯片
     function goToSlide(index) {
-        slides[currentSlide].classList.remove('active');
-        slides[index].classList.add('active');
+        if (index >= 0 && index < slides.length) {
+            slides[currentSlide].classList.remove('active');
+            slides[index].classList.add('active');
 
-        // 更新指示器
-        if (indicators) {
-            const indicatorDots = indicators.querySelectorAll('.indicator');
-            indicatorDots[currentSlide].classList.remove('active');
-            indicatorDots[index].classList.add('active');
+            // 更新指示器
+            if (indicators) {
+                const indicatorDots = indicators.querySelectorAll('.indicator');
+                if (indicatorDots[currentSlide]) indicatorDots[currentSlide].classList.remove('active');
+                if (indicatorDots[index]) indicatorDots[index].classList.add('active');
+            }
+
+            currentSlide = index;
         }
-
-        currentSlide = index;
     }
 
     // 上一张
@@ -168,12 +217,16 @@ function initHeroSlider() {
 
     // 开始自动轮播
     function startSlideshow() {
-        slideInterval = setInterval(nextSlide, intervalTime);
+        if (slides.length > 1) {
+            slideInterval = setInterval(nextSlide, intervalTime);
+        }
     }
 
     // 停止自动轮播
     function stopSlideshow() {
-        clearInterval(slideInterval);
+        if (slideInterval) {
+            clearInterval(slideInterval);
+        }
     }
 
     // 绑定事件

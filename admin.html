@@ -1004,105 +1004,7 @@
         background: rgba(255, 255, 255, 0.25);
     }
 
-    /* Account Settings Modal Styles */
-    .account-modal .modal {
-        max-width: 450px;
-    }
-
-    .account-tabs {
-        display: flex;
-        gap: 8px;
-        margin-bottom: 24px;
-        background: #f5f5f5;
-        padding: 6px;
-        border-radius: 10px;
-    }
-
-    .account-tab {
-        flex: 1;
-        padding: 12px 16px;
-        font-size: 14px;
-        font-weight: 500;
-        color: #666;
-        background: transparent;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-
-    .account-tab.active {
-        background: #fff;
-        color: #1a1a1a;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    }
-
-    .account-tab:hover:not(.active) {
-        color: #333;
-    }
-
-    .tab-content {
-        display: none;
-    }
-
-    .tab-content.active {
-        display: block;
-    }
-
-    .current-info {
-        background: #f8f9fa;
-        border-radius: 10px;
-        padding: 16px;
-        margin-bottom: 20px;
-    }
-
-    .current-info .label {
-        font-size: 12px;
-        color: #999;
-        margin-bottom: 4px;
-    }
-
-    .current-info .value {
-        font-size: 15px;
-        font-weight: 500;
-        color: #1a1a1a;
-    }
-
-    .password-strength {
-        height: 4px;
-        background: #e5e5e5;
-        border-radius: 2px;
-        margin-top: 8px;
-        overflow: hidden;
-    }
-
-    .password-strength-bar {
-        height: 100%;
-        width: 0;
-        transition: all 0.3s ease;
-        border-radius: 2px;
-    }
-
-    .password-strength-bar.weak {
-        width: 33%;
-        background: #ff5252;
-    }
-
-    .password-strength-bar.medium {
-        width: 66%;
-        background: #ffc107;
-    }
-
-    .password-strength-bar.strong {
-        width: 100%;
-        background: #4caf50;
-    }
-
-    .password-hint {
-        font-size: 12px;
-        color: #999;
-        margin-top: 8px;
-    }
+    
 
 </style>
 </head>
@@ -1138,10 +1040,6 @@
                 <div class="nav-item" data-page="about">
                     <span class="nav-icon">👤</span>
                     <span>关于我</span>
-                </div>
-                <div class="nav-item" data-page="account">
-                    <span class="nav-icon">👤</span>
-                    <span>账户设置</span>
                 </div>
                 <div class="nav-item" data-page="settings">
                     <span class="nav-icon">⚙️</span>
@@ -1747,18 +1645,7 @@
         console.log('[Account] 初始化账户设置...');
 
         // 初始化标签切换
-        document.querySelectorAll('.account-tab').forEach(tab => {
-            tab.addEventListener('click', function() {
-                const tabId = this.dataset.tab;
-
-                // 切换标签状态
-                document.querySelectorAll('.account-tab').forEach(t => t.classList.remove('active'));
-                this.classList.add('active');
-
-                // 切换内容
-                document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-                document.getElementById('tab-' + tabId)?.classList.add('active');
-            });
+        document.querySelectorAll(');
         });
 
         // 初始化用户名表单
@@ -1802,39 +1689,14 @@
         }
     }
 
-    function updatePasswordStrength(password) {
-        const strengthBar = document.getElementById('password-strength-bar');
-        if (!strengthBar) return;
-
-        let strength = 0;
-
-        if (password.length >= 6) strength += 1;
-        if (password.length >= 10) strength += 1;
-        if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength += 1;
-        if (/[0-9]/.test(password)) strength += 1;
-        if (/[^a-zA-Z0-9]/.test(password)) strength += 1;
-
-        strengthBar.className = 'password-strength-bar';
-        if (strength <= 2) {
-            strengthBar.classList.add('weak');
-        } else if (strength <= 4) {
+     else if (strength <= 4) {
             strengthBar.classList.add('medium');
         } else {
             strengthBar.classList.add('strong');
         }
     }
 
-    async function handleUsernameChange(event) {
-        event.preventDefault();
-
-        const newUsername = document.getElementById('new-username').value.trim();
-        const confirmUsername = document.getElementById('confirm-username').value.trim();
-
-        // 验证输入
-        if (!newUsername || newUsername.length < 3) {
-            showToast('用户名至少需要3个字符', 'error');
-            return;
-        }
+    
 
         if (newUsername !== confirmUsername) {
             showToast('两次输入的用户名不一致', 'error');
@@ -1871,18 +1733,7 @@
         }
     }
 
-    async function handlePasswordChange(event) {
-        event.preventDefault();
-
-        const currentPassword = document.getElementById('current-password').value;
-        const newPassword = document.getElementById('new-password').value;
-        const confirmNewPassword = document.getElementById('confirm-new-password').value;
-
-        // 验证输入
-        if (!currentPassword) {
-            showToast('请输入当前密码', 'error');
-            return;
-        }
+    
 
         if (!newPassword || newPassword.length < 6) {
             showToast('新密码至少需要6个字符', 'error');
@@ -3509,18 +3360,7 @@ const previewImg = bannerItem.querySelector('.banner-preview img');
         console.log('[Account] 初始化账户设置...');
 
         // 初始化标签切换
-        document.querySelectorAll('.account-tab').forEach(tab => {
-            tab.addEventListener('click', function() {
-                const tabId = this.dataset.tab;
-
-                // 切换标签状态
-                document.querySelectorAll('.account-tab').forEach(t => t.classList.remove('active'));
-                this.classList.add('active');
-
-                // 切换内容
-                document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-                document.getElementById('tab-' + tabId)?.classList.add('active');
-            });
+        document.querySelectorAll(');
         });
 
         // 初始化用户名表单
@@ -3564,39 +3404,14 @@ const previewImg = bannerItem.querySelector('.banner-preview img');
         }
     }
 
-    function updatePasswordStrength(password) {
-        const strengthBar = document.getElementById('password-strength-bar');
-        if (!strengthBar) return;
-
-        let strength = 0;
-
-        if (password.length >= 6) strength += 1;
-        if (password.length >= 10) strength += 1;
-        if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength += 1;
-        if (/[0-9]/.test(password)) strength += 1;
-        if (/[^a-zA-Z0-9]/.test(password)) strength += 1;
-
-        strengthBar.className = 'password-strength-bar';
-        if (strength <= 2) {
-            strengthBar.classList.add('weak');
-        } else if (strength <= 4) {
+     else if (strength <= 4) {
             strengthBar.classList.add('medium');
         } else {
             strengthBar.classList.add('strong');
         }
     }
 
-    async function handleUsernameChange(event) {
-        event.preventDefault();
-
-        const newUsername = document.getElementById('new-username').value.trim();
-        const confirmUsername = document.getElementById('confirm-username').value.trim();
-
-        // 验证输入
-        if (!newUsername || newUsername.length < 3) {
-            showToast('用户名至少需要3个字符', 'error');
-            return;
-        }
+    
 
         if (newUsername !== confirmUsername) {
             showToast('两次输入的用户名不一致', 'error');
@@ -3633,18 +3448,7 @@ const previewImg = bannerItem.querySelector('.banner-preview img');
         }
     }
 
-    async function handlePasswordChange(event) {
-        event.preventDefault();
-
-        const currentPassword = document.getElementById('current-password').value;
-        const newPassword = document.getElementById('new-password').value;
-        const confirmNewPassword = document.getElementById('confirm-new-password').value;
-
-        // 验证输入
-        if (!currentPassword) {
-            showToast('请输入当前密码', 'error');
-            return;
-        }
+    
 
         if (!newPassword || newPassword.length < 6) {
             showToast('新密码至少需要6个字符', 'error');
