@@ -531,6 +531,7 @@ this.photos = JSON.parse(localPhotos);
         localStorage.removeItem('admin_session');
         console.log('[auth] 用户已退出');
         return { success: true }
+    }
 
     // ============ 用户管理方法 ============
 
