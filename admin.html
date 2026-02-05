@@ -1639,37 +1639,7 @@
 
     <script src="supabase.js">
 
-    // ============ 账户设置 ============
-
-    function initAccountSettings() {
-        console.log('[Account] 初始化账户设置...');
-
-        // 初始化标签切换
-        document.querySelectorAll(');
-        });
-
-        // 初始化用户名表单
-        const usernameForm = document.getElementById('username-form');
-        if (usernameForm) {
-            usernameForm.addEventListener('submit', handleUsernameChange);
-        }
-
-        // 初始化密码表单
-        const passwordForm = document.getElementById('password-form');
-        if (passwordForm) {
-            passwordForm.addEventListener('submit', handlePasswordChange);
-            // 密码强度检测
-            const newPasswordInput = document.getElementById('new-password');
-            if (newPasswordInput) {
-                newPasswordInput.addEventListener('input', function() {
-                    updatePasswordStrength(this.value);
-                });
-            }
-        }
-
-        // 加载当前用户名
-        loadCurrentUsername();
-    }
+    
 
     async function loadCurrentUsername() {
         try {
@@ -3354,37 +3324,7 @@ const previewImg = bannerItem.querySelector('.banner-preview img');
         }
     
 
-    // ============ 账户设置 ============
-
-    function initAccountSettings() {
-        console.log('[Account] 初始化账户设置...');
-
-        // 初始化标签切换
-        document.querySelectorAll(');
-        });
-
-        // 初始化用户名表单
-        const usernameForm = document.getElementById('username-form');
-        if (usernameForm) {
-            usernameForm.addEventListener('submit', handleUsernameChange);
-        }
-
-        // 初始化密码表单
-        const passwordForm = document.getElementById('password-form');
-        if (passwordForm) {
-            passwordForm.addEventListener('submit', handlePasswordChange);
-            // 密码强度检测
-            const newPasswordInput = document.getElementById('new-password');
-            if (newPasswordInput) {
-                newPasswordInput.addEventListener('input', function() {
-                    updatePasswordStrength(this.value);
-                });
-            }
-        }
-
-        // 加载当前用户名
-        loadCurrentUsername();
-    }
+    
 
     async function loadCurrentUsername() {
         try {
