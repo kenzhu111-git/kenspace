@@ -1,6 +1,9 @@
-﻿/**
+/**
  * Supabase 客户端配置
  * PHOTOGRAPHER - 个人摄影网站
+ * 
+ * 修复：将照片数据存储到 Supabase 数据库（而非 localStorage）
+ * 解决本地和线上数据不同步的问题
  */
 
 // Supabase 配置
@@ -11,38 +14,7 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const STORAGE_BUCKET = 'photos';
 
 // 数据版本号
-const DATA_VERSION = '3';
-
-// 测试 Supabase Storage 是否可用
-async function testSupabaseStorage() {
-    console.log('[Supabase Storage] 测试连接...');
-    try {
-        const response = await fetch(
-            `${SUPABASE_URL}/storage/v1/object/list/${STORAGE_BUCKET}`,
-            {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-                    'apikey': SUPABASE_ANON_KEY,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ prefix: '', limit: 1 })
-            }
-        );
-
-        if (response.ok) {
-            console.log('[Supabase Storage] 连接成功');
-            return true;
-        } else {
-            const error = await response.text();
-            console.error('[Supabase Storage] 连接失败:', error);
-            return false;
-        }
-    } catch (error) {
-        console.error('[Supabase Storage] 连接错误:', error.message);
-        return false;
-    }
-}
+const DATA_VERSION = '4';
 
 // 默认分类
 const DEFAULT_CATEGORIES = [
@@ -63,7 +35,115 @@ const DEFAULT_ATTRIBUTES = [
 
 let supabaseClient = null;
 
-// 模拟Supabase客户端
+// ==================== 数据库操作函数 ====================
+
+/**
+ * 通用数据库查询函数
+ */
+async function dbQuery(table, method = 'GET', body = null, id = null) {
+    let url = `${SUPABASE_URL}/rest/v1/${table}`;
+    if (id) {
+        url += `?id=eq.${id}`;
+    }
+    
+    const headers = {
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'apikey': SUPABASE_ANON_KEY,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+    };
+    
+    if (method === 'GET') {
+        headers['Range'] = '0-999'; // 获取所有记录
+    }
+    
+    const options = {
+        method,
+        headers
+    };
+    
+    if (body && (method === 'POST' || method === 'PATCH' || method === 'PUT')) {
+        options.body = JSON.stringify(body);
+    }
+    
+    try {
+        const response = await fetch(url, options);
+        
+        if (!response.ok) {
+            const error = await response.text();
+            console.error(`[DB] ${method} ${table} 失败:`, error);
+            return { data: null, error: { message: error } };
+        }
+        
+        // 获取返回数据
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            const data = await response.json();
+            return { data, error: null };
+        }
+        return { data: null, error: null };
+    } catch (error) {
+        console.error(`[DB] ${method} ${table} 异常:`, error);
+        return { data: null, error };
+    }
+}
+
+/**
+ * 照片数据库操作
+ */
+const PhotoDB = {
+    async getAll() {
+        console.log('[PhotoDB] 从数据库获取所有照片...');
+        const result = await dbQuery('photos', 'GET');
+        if (result.error) {
+            console.error('[PhotoDB] 获取失败:', result.error);
+            return { data: [], error: result.error };
+        }
+        console.log('[PhotoDB] 获取到照片数量:', result.data?.length || 0);
+        return { data: result.data || [], error: null };
+    },
+    
+    async insert(photoData) {
+        console.log('[PhotoDB] 保存照片到数据库:', photoData.title);
+        const photo = {
+            ...photoData,
+            id: photoData.id || crypto.randomUUID(),
+            created_at: new Date().toISOString(),
+            is_active: photoData.is_active !== undefined ? photoData.is_active : true
+        };
+        
+        const result = await dbQuery('photos', 'POST', photo);
+        if (result.error) {
+            console.error('[PhotoDB] 保存失败:', result.error);
+            return { error: result.error };
+        }
+        console.log('[PhotoDB] 保存成功:', photo.id);
+        return { error: null };
+    },
+    
+    async update(id, updates) {
+        console.log('[PhotoDB] 更新照片:', id);
+        const result = await dbQuery('photos', 'PATCH', updates, id);
+        if (result.error) {
+            console.error('[PhotoDB] 更新失败:', result.error);
+            return { error: result.error };
+        }
+        return { error: null };
+    },
+    
+    async delete(id) {
+        console.log('[PhotoDB] 删除照片:', id);
+        const result = await dbQuery('photos', 'DELETE', null, id);
+        if (result.error) {
+            console.error('[PhotoDB] 删除失败:', result.error);
+            return { error: result.error };
+        }
+        return { error: null };
+    }
+};
+
+// ==================== Supabase 客户端类 ====================
+
 class SimpleSupabaseClient {
     constructor() {
         this.photos = [];
@@ -73,61 +153,236 @@ class SimpleSupabaseClient {
     }
 
     async loadAll() {
-        console.log('[loadAll] 开始加载数据');
-
-        const savedVersion = localStorage.getItem('data_version');
-        if (savedVersion !== DATA_VERSION) {
-            localStorage.removeItem('photos');
-            localStorage.removeItem('categories');
-            localStorage.removeItem('attributes');
-            localStorage.setItem('data_version', DATA_VERSION);
+        console.log('[loadAll] 开始加载数据...');
+        
+        // 从数据库加载照片（而不是 localStorage）
+        const photosResult = await PhotoDB.getAll();
+        this.photos = photosResult.data || [];
+        
+        // 分类和属性仍然使用 localStorage（这些不跨域同步）
+        const localCategories = localStorage.getItem('categories');
+        if (localCategories) {
+            this.categories = JSON.parse(localCategories);
+        } else {
+            this.categories = [...DEFAULT_CATEGORIES];
+            this.saveCategories();
         }
 
+        const localAttributes = localStorage.getItem('attributes');
+        if (localAttributes) {
+            this.attributes = JSON.parse(localAttributes);
+        } else {
+            this.attributes = [...DEFAULT_ATTRIBUTES];
+            this.saveAttributes();
+        }
+
+        // 加载其他数据
+        await this.loadAbout();
+        await this.loadBanners();
+        
+        this.isLoaded = true;
+        console.log('[loadAll] 数据加载完成，照片数量:', this.photos.length);
+    }
+
+    async saveCategories() {
         try {
-            const localCategories = localStorage.getItem('categories');
-            if (localCategories) {
-                this.categories = JSON.parse(localCategories);
-            } else {
-                this.categories = [...DEFAULT_CATEGORIES];
-                this.saveCategories();
-            }
-
-            const localAttributes = localStorage.getItem('attributes');
-            if (localAttributes) {
-                this.attributes = JSON.parse(localAttributes);
-            } else {
-                this.attributes = [...DEFAULT_ATTRIBUTES];
-                this.saveAttributes();
-            }
-
-            await this.loadPhotos();
-            await this.loadAbout();
-            await this.loadBanners();
-            await this.loadUsers();
-            this.isLoaded = true;
-            console.log('[loadAll] 数据加载完成');
+            localStorage.setItem('categories', JSON.stringify(this.categories));
+            return { success: true };
         } catch (error) {
-            this.initializeDefaults();
+            return { success: false, error: error.message };
         }
     }
 
-    async loadPhotos() {
+    async saveAttributes() {
         try {
-            const localPhotos = localStorage.getItem('photos');
-            if (localPhotos) {
-this.photos = JSON.parse(localPhotos);
-            } else {
-                this.photos = this.getDefaultPhotos();
-                this.savePhotos();
-            }
-            return { data: this.photos, count: this.photos.length };
+            localStorage.setItem('attributes', JSON.stringify(this.attributes));
+            return { success: true };
         } catch (error) {
-            this.photos = this.getDefaultPhotos();
-            this.savePhotos();
-            return { data: this.photos, count: this.photos.length, error: error.message };
+            return { success: false, error: error.message };
         }
     }
+
+    // ==================== 照片 CRUD 操作 ====================
     
+    async select(table, options = {}) {
+        if (!this.isLoaded) await this.loadAll();
+        
+        if (table === 'photos') {
+            let result = [...this.photos];
+            
+            // 应用过滤
+            if (options.filters) {
+                for (const [field, value] of Object.entries(options.filters)) {
+                    if (value) {
+                        result = result.filter(p => p[field] === value);
+                    }
+                }
+            }
+            
+            // 应用排序
+            if (options.order) {
+                const { field, ascending = true } = options.order;
+                result.sort((a, b) => {
+                    const aVal = a[field] || 0;
+                    const bVal = b[field] || 0;
+                    return ascending ? (aVal - bVal) : (bVal - aVal);
+                });
+            }
+            
+            return { data: result, error: null };
+        }
+        
+        return { data: null, error: { message: '不支持的表: ' + table } };
+    }
+
+    async insert(table, data) {
+        if (!this.isLoaded) await this.loadAll();
+        
+        if (table === 'photos') {
+            // 保存到数据库
+            const dbResult = await PhotoDB.insert(data);
+            if (dbResult.error) {
+                return { error: dbResult.error };
+            }
+            
+            // 添加到本地缓存
+            const newPhoto = {
+                ...data,
+                id: data.id || crypto.randomUUID(),
+                created_at: new Date().toISOString(),
+                is_active: data.is_active !== undefined ? data.is_active : true,
+                sort_order: data.sort_order || this.photos.length + 1
+            };
+            this.photos.push(newPhoto);
+            
+            return { data: [newPhoto], error: null };
+        }
+        
+        return { error: { message: '不支持的表: ' + table } };
+    }
+
+    async update(table, id, updates) {
+        if (!this.isLoaded) await this.loadAll();
+        
+        if (table === 'photos') {
+            // 更新数据库
+            const dbResult = await PhotoDB.update(id, updates);
+            if (dbResult.error) {
+                return { error: dbResult.error };
+            }
+            
+            // 更新本地缓存
+            const index = this.photos.findIndex(p => p.id === id);
+            if (index !== -1) {
+                this.photos[index] = { ...this.photos[index], ...updates };
+            }
+            
+            return { data: [this.photos[index]], error: null };
+        }
+        
+        return { error: { message: '不支持的表: ' + table } };
+    }
+
+    async delete(table, id) {
+        if (!this.isLoaded) await this.loadAll();
+        
+        if (table === 'photos') {
+            // 从数据库删除
+            const dbResult = await PhotoDB.delete(id);
+            if (dbResult.error) {
+                return { error: dbResult.error };
+            }
+            
+            // 从本地缓存删除
+            const index = this.photos.findIndex(p => p.id === id);
+            if (index !== -1) {
+                this.photos.splice(index, 1);
+            }
+            
+            return { data: [{ id }], error: null };
+        }
+        
+        return { error: { message: '不支持的表: ' + table } };
+    }
+
+    async getPhoto(id) {
+        if (!this.isLoaded) await this.loadAll();
+        const photo = this.photos.find(p => p.id === id);
+        if (!photo) return { data: null, error: { message: '作品不存在' } };
+        return { data: photo, error: null };
+    }
+
+    // ==================== 其他数据操作（保持 localStorage） ====================
+
+    async getCategories() {
+        if (!this.isLoaded) await this.loadAll();
+        return { data: this.categories, error: null };
+    }
+
+    async addCategory(category) {
+        const newCategory = {
+            ...category,
+            id: category.id || crypto.randomUUID(),
+            created_at: new Date().toISOString()
+        };
+        this.categories.push(newCategory);
+        await this.saveCategories();
+        return { data: [newCategory], error: null };
+    }
+
+    async updateCategory(id, updates) {
+        const index = this.categories.findIndex(c => c.id === id);
+        if (index === -1) return { error: { message: '分类不存在' } };
+        this.categories[index] = { ...this.categories[index], ...updates };
+        await this.saveCategories();
+        return { data: [this.categories[index]], error: null };
+    }
+
+    async deleteCategory(id) {
+        const hasPhotos = this.photos.some(p => p.category === id);
+        if (hasPhotos) return { error: { message: '该分类下有作品，无法删除' } };
+        
+        const index = this.categories.findIndex(c => c.id === id);
+        if (index === -1) return { error: { message: '分类不存在' } };
+        this.categories.splice(index, 1);
+        await this.saveCategories();
+        return { data: [{ id }], error: null };
+    }
+
+    async getAttributes() {
+        if (!this.isLoaded) await this.loadAll();
+        return { data: this.attributes, error: null };
+    }
+
+    async addAttribute(attribute) {
+        const newAttr = {
+            ...attribute,
+            id: attribute.id || crypto.randomUUID(),
+            created_at: new Date().toISOString()
+        };
+        this.attributes.push(newAttr);
+        await this.saveAttributes();
+        return { data: [newAttr], error: null };
+    }
+
+    async updateAttribute(id, updates) {
+        const index = this.attributes.findIndex(a => a.id === id);
+        if (index === -1) return { error: { message: '属性不存在' } };
+        this.attributes[index] = { ...this.attributes[index], ...updates };
+        await this.saveAttributes();
+        return { data: [this.attributes[index]], error: null };
+    }
+
+    async deleteAttribute(id) {
+        const index = this.attributes.findIndex(a => a.id === id);
+        if (index === -1) return { error: { message: '属性不存在' } };
+        this.attributes.splice(index, 1);
+        await this.saveAttributes();
+        return { data: [{ id }], error: null };
+    }
+
+    // ==================== 关于和 Banner 数据（保持 localStorage） ====================
+
     async loadAbout() {
         try {
             const localAbout = localStorage.getItem('about');
@@ -137,85 +392,12 @@ this.photos = JSON.parse(localPhotos);
                 this.about = this.getDefaultAbout();
                 this.saveAbout();
             }
-            return { data: this.about, error: null };
         } catch (error) {
             this.about = this.getDefaultAbout();
             this.saveAbout();
-            return { data: this.about, error: error.message };
-        }
-    }
-    
-    async loadBanners() {
-        try {
-            const localBanners = localStorage.getItem('banners');
-            if (localBanners) {
-                this.banners = JSON.parse(localBanners);
-            } else {
-                this.banners = this.getDefaultBanners();
-                this.saveBanners();
-            }
-            return { data: this.banners, count: this.banners.length };
-        } catch (error) {
-            this.banners = this.getDefaultBanners();
-            this.saveBanners();
-            return { data: this.banners, count: this.banners.length, error: error.message };
-        }
-    }
-    
-    async loadUsers() {
-        try {
-            const localUsers = localStorage.getItem('users');
-            if (localUsers) {
-                this.users = JSON.parse(localUsers);
-            } else {
-                this.users = this.getDefaultUsers();
-                this.saveUsers();
-            }
-            return { data: this.users, count: this.users.length };
-        } catch (error) {
-            this.users = this.getDefaultUsers();
-            this.saveUsers();
-            return { data: this.users, count: this.users.length, error: error.message };
-        }
-    }
-    
-    async saveUsers() {
-        try {
-            localStorage.setItem('users', JSON.stringify(this.users));
-            return { success: true };
-        } catch (error) {
-            return { success: false, error: error.message };
         }
     }
 
-    // 获取用户列表
-    async getUsers() {
-        if (!this.isLoaded) await this.loadAll();
-        return { users: this.users, error: null };
-    }
-
-    initializeDefaults() {
-        this.categories = [...DEFAULT_CATEGORIES];
-        this.attributes = [...DEFAULT_ATTRIBUTES];
-        this.photos = this.getDefaultPhotos();
-        this.about = this.getDefaultAbout();
-        this.banners = this.getDefaultBanners();
-        this.users = this.getDefaultUsers();
-        this.saveCategories();
-        this.saveAttributes();
-        this.savePhotos();
-        this.saveAbout();
-        this.saveBanners();
-        this.saveUsers();
-        this.isLoaded = true;
-    }
-
-    // 获取默认数据 - 返回空数组
-    getDefaultPhotos() {
-        return [];
-    }
-    
-    // 获取默认关于数据
     getDefaultAbout() {
         return {
             name: 'PHOTOGRAPHER',
@@ -226,35 +408,43 @@ this.photos = JSON.parse(localPhotos);
             social_links: {}
         };
     }
-    
-    // 获取默认管理员用户
-    getDefaultUsers() {
-        // 默认管理员账号（密码为 admin123）
-        // 实际使用时建议修改密码
-        // 硬编码管理员账户
-        return [
-            {
-                id: 'admin-1',
-                username: 'happyyuge',
-                password_hash: this.hashPassword('kenspace10000'),
-                role: 'admin',
-                created_at: new Date().toISOString()
-            }
-        ];
-    }
 
-    // 简单的密码哈希函数（实际项目中建议使用更安全的方式）
-    hashPassword(password) {
-        let hash = 0;
-        for (let i = 0; i < password.length; i++) {
-            const char = password.charCodeAt(i);
-            hash = ((hash << 5) - hash) + char;
-            hash = hash & hash;
+    async saveAbout() {
+        try {
+            localStorage.setItem('about', JSON.stringify(this.about));
+            return { success: true };
+        } catch (error) {
+            return { success: false, error: error.message };
         }
-        return hash.toString(16);
     }
 
-    // 获取默认 Banner 数据
+    async getAbout() {
+        if (!this.isLoaded) await this.loadAll();
+        return { data: this.about, error: null };
+    }
+
+    async updateAbout(updates) {
+        if (!this.isLoaded) await this.loadAll();
+        this.about = { ...this.about, ...updates };
+        await this.saveAbout();
+        return { data: [this.about], error: null };
+    }
+
+    async loadBanners() {
+        try {
+            const localBanners = localStorage.getItem('banners');
+            if (localBanners) {
+                this.banners = JSON.parse(localBanners);
+            } else {
+                this.banners = this.getDefaultBanners();
+                this.saveBanners();
+            }
+        } catch (error) {
+            this.banners = this.getDefaultBanners();
+            this.saveBanners();
+        }
+    }
+
     getDefaultBanners() {
         return [
             {
@@ -284,44 +474,8 @@ this.photos = JSON.parse(localPhotos);
         ];
     }
 
-    async saveCategories() {
-        try {
-            localStorage.setItem('categories', JSON.stringify(this.categories));
-            return { success: true };
-        } catch (error) {
-            return { success: false, error: error.message };
-        }
-    }
-
-    async saveAttributes() {
-        try {
-            localStorage.setItem('attributes', JSON.stringify(this.attributes));
-            return { success: true };
-        } catch (error) {
-            return { success: false, error: error.message };
-        }
-    }
-
-    async savePhotos() {
-        try {
-            localStorage.setItem('photos', JSON.stringify(this.photos));
-            return { success: true };
-        } catch (error) {
-            return { success: false, error: error.message };
-        }
-    }
-    
-    async saveAbout() {
-        try {
-            localStorage.setItem('about', JSON.stringify(this.about));
-            return { success: true };
-        } catch (error) {
-            return { success: false, error: error.message };
-        }
-    }
-    
     async saveBanners() {
-        try {
+try {
             localStorage.setItem('banners', JSON.stringify(this.banners));
             return { success: true };
         } catch (error) {
@@ -329,149 +483,11 @@ this.photos = JSON.parse(localPhotos);
         }
     }
 
-    async getCategories() {
-        if (!this.isLoaded) await this.loadAll();
-        return { data: this.categories, error: null };
-    }
-
-    async addCategory(category) {
-        if (!this.isLoaded) await this.loadAll();
-        const newCategory = {
-            ...category,
-            id: category.id || crypto.randomUUID(),
-            created_at: new Date().toISOString()
-        };
-        this.categories.push(newCategory);
-        await this.saveCategories();
-        return { data: [newCategory], error: null };
-    }
-
-    async updateCategory(id, updates) {
-        if (!this.isLoaded) await this.loadAll();
-        const index = this.categories.findIndex(c => c.id === id);
-        if (index === -1) return { error: { message: '分类不存在' } };
-        this.categories[index] = { ...this.categories[index], ...updates };
-        await this.saveCategories();
-        return { data: [this.categories[index]], error: null };
-    }
-
-    async deleteCategory(id) {
-        if (!this.isLoaded) await this.loadAll();
-        const hasPhotos = this.photos.some(p => p.category === id);
-        if (hasPhotos) return { error: { message: '该分类下有作品，无法删除' } };
-        const index = this.categories.findIndex(c => c.id === id);
-        if (index === -1) return { error: { message: '分类不存在' } };
-        this.categories.splice(index, 1);
-        await this.saveCategories();
-        return { data: [{ id }], error: null };
-    }
-
-    async getAttributes() {
-        if (!this.isLoaded) await this.loadAll();
-        return { data: this.attributes, error: null };
-    }
-
-    async addAttribute(attribute) {
-        if (!this.isLoaded) await this.loadAll();
-        const newAttribute = {
-            ...attribute,
-            id: attribute.id || crypto.randomUUID(),
-            created_at: new Date().toISOString()
-        };
-        this.attributes.push(newAttribute);
-        await this.saveAttributes();
-        return { data: [newAttribute], error: null };
-    }
-
-    async updateAttribute(id, updates) {
-        if (!this.isLoaded) await this.loadAll();
-        const index = this.attributes.findIndex(a => a.id === id);
-        if (index === -1) return { error: { message: '属性不存在' } };
-        this.attributes[index] = { ...this.attributes[index], ...updates };
-        await this.saveAttributes();
-        return { data: [this.attributes[index]], error: null };
-    }
-
-    async deleteAttribute(id) {
-        if (!this.isLoaded) await this.loadAll();
-        const index = this.attributes.findIndex(a => a.id === id);
-        if (index === -1) return { error: { message: '属性不存在' } };
-        this.attributes.splice(index, 1);
-        await this.saveAttributes();
-        return { data: [{ id }], error: null };
-    }
-
-    async select(table, options = {}) {
-        if (!this.isLoaded) await this.loadAll();
-        let result = [...this.photos];
-
-        if (options.filter) {
-            if (options.filter.category) {
-                result = result.filter(p => p.category === options.filter.category);
-            }
-            if (options.filter.is_active !== undefined) {
-                result = result.filter(p => p.is_active === options.filter.is_active);
-            }
-        }
-
-        if (options.order) {
-            const field = options.order.field || 'sort_order';
-            const ascending = options.order.ascending !== false;
-            result.sort((a, b) => ascending ? (a[field] || 0) - (b[field] || 0) : (b[field] || 0) - (a[field] || 0));
-        }
-
-        return { data: result, error: null };
-    }
-
-    async insert(table, data) {
-        if (!this.isLoaded) await this.loadAll();
-        const newPhoto = {
-            ...data,
-            id: data.id || crypto.randomUUID(),
-            created_at: new Date().toISOString(),
-            is_active: data.is_active !== undefined ? data.is_active : true,
-            sort_order: data.sort_order || this.photos.length + 1
-        };
-        this.photos.push(newPhoto);
-        await this.savePhotos();
-        return { data: [newPhoto], error: null };
-    }
-
-    async update(table, id, updates) {
-        if (!this.isLoaded) await this.loadAll();
-        const index = this.photos.findIndex(p => p.id === id);
-        if (index === -1) return { error: { message: '作品不存在' } };
-        this.photos[index] = { ...this.photos[index], ...updates };
-        await this.savePhotos();
-        return { data: [this.photos[index]], error: null };
-    }
-
-    async delete(table, id) {
-        if (!this.isLoaded) await this.loadAll();
-        const index = this.photos.findIndex(p => p.id === id);
-        if (index === -1) return { error: { message: '作品不存在' } };
-        this.photos.splice(index, 1);
-        await this.savePhotos();
-        return { data: [{ id }], error: null };
-    }
-
-    async getAbout() {
-        if (!this.isLoaded) await this.loadAll();
-        return { data: this.about, error: null };
-    }
-    
-    async updateAbout(updates) {
-        if (!this.isLoaded) await this.loadAll();
-        this.about = { ...this.about, ...updates };
-        await this.saveAbout();
-        return { data: [this.about], error: null };
-    }
-    
     async getBanners() {
         if (!this.isLoaded) await this.loadAll();
         return { data: this.banners, error: null };
     }
-    
+
     async addBanner(banner) {
         if (!this.isLoaded) await this.loadAll();
         const newBanner = {
@@ -484,7 +500,7 @@ this.photos = JSON.parse(localPhotos);
         await this.saveBanners();
         return { data: [newBanner], error: null };
     }
-    
+
     async updateBanner(id, updates) {
         if (!this.isLoaded) await this.loadAll();
         const index = this.banners.findIndex(b => b.id === id);
@@ -493,7 +509,7 @@ this.photos = JSON.parse(localPhotos);
         await this.saveBanners();
         return { data: [this.banners[index]], error: null };
     }
-    
+
     async deleteBanner(id) {
         if (!this.isLoaded) await this.loadAll();
         const index = this.banners.findIndex(b => b.id === id);
@@ -503,313 +519,8 @@ this.photos = JSON.parse(localPhotos);
         return { data: [{ id }], error: null };
     }
 
-    // ============ 用户认证 ============
-    
-    async login(username, password) {
-        if (!this.isLoaded) await this.loadAll();
-        
-        const user = this.users.find(u => u.username === username);
-        if (!user) {
-            return { error: { message: '用户名不存在' }, data: null };
-        }
-        
-        const passwordHash = this.hashPassword(password);
-        if (user.password_hash !== passwordHash) {
-            return { error: { message: '密码错误' }, data: null };
-        }
-        
-        // 登录成功，生成 session
-        const session = {
-            user_id: user.id,
-            username: user.username,
-            role: user.role,
-            token: this.generateToken(),
-            expires_at: Date.now() + 7 * 24 * 60 * 60 * 1000 // 7天过期
-        };
-        
-        // 保存 session
-        localStorage.setItem('admin_session', JSON.stringify(session));
-        
-        console.log('[auth] 用户登录成功:', username);
-        return { error: null, data: session };
-    }
-    
-    async logout() {
-        localStorage.removeItem('admin_session');
-        console.log('[auth] 用户已退出');
-        return { success: true }
-    }
+    // ==================== 文件上传（保持不变） ====================
 
-    // ============ 用户管理方法 ============
-
-    /**
-     * 更新用户信息（用户名/密码）
-     * @param {Object} updates - 更新的字段 {username, password, new_password}
-     * @returns {Object} {success, error}
-     */
-    async updateUser(updates) {
-        console.log('[Supabase] 更新用户信息:', updates);
-
-        try {
-// 获取当前用户
-            const { users } = await this.getUsers();
-            if (!users || users.length === 0) {
-                return { error: { message: '未找到用户数据' } };
-            }
-            const currentUser = users[0];
-
-            // 验证密码（如果是修改密码）
-            if (updates.password) {
-                const passwordHash = this.hashPassword(updates.password);
-                if (passwordHash !== currentUser.password_hash) {
-                    return { error: { message: '当前密码不正确' } };
-                }
-            }
-
-            // 准备更新数据
-            const userData = {
-                id: currentUser.id,
-                username: updates.username || currentUser.username,
-                role: currentUser.role || 'admin',
-                updated_at: new Date().toISOString()
-            };
-
-            // 如果要修改密码
-            if (updates.new_password && updates.new_password.length >= 6) {
-                userData.password_hash = this.hashPassword(updates.new_password);
-            } else if (updates.new_password) {
-                return { error: { message: '新密码长度至少6个字符' } };
-            }
-
-            // 更新this.users数组
-            this.users = [userData];
-
-            // 保存用户数据
-            const saveResult = await this.saveUsers();
-            if (saveResult.error) {
-                return { error: saveResult.error };
-            }
-
-            console.log('[Supabase] 用户信息更新成功');
-            return { success: true, data: userData };
-        } catch (error) {
-            console.error('[Supabase] 更新用户信息失败:', error);
-            return { error: { message: error.message } };
-        }
-    }
-
-    /**
-     * 验证当前密码
-     * @param {string} password - 当前密码
-     * @returns {boolean} 是否正确
-     */
-    async verifyPassword(password) {
-        try {
-            const { users } = await this.getUsers();
-            if (!users || users.length === 0) {
-                return false;
-            }
-            const currentUser = users[0];
-            const passwordHash = this.hashPassword(password);
-            return passwordHash === currentUser.password_hash;
-        } catch (error) {
-            console.error('[Supabase] 验证密码失败:', error);
-            return false;
-        }
-    }
-    
-    async checkSession() {
-        const sessionStr = localStorage.getItem('admin_session');
-        if (!sessionStr) {
-            return { authenticated: false, session: null };
-        }
-        
-        try {
-            const session = JSON.parse(sessionStr);
-            
-            // 检查是否过期
-            if (Date.now() > session.expires_at) {
-                this.logout();
-                return { authenticated: false, session: null };
-            }
-            
-            return { authenticated: true, session };
-        } catch (error) {
-            return { authenticated: false, session: null };
-        }
-    }
-    
-    generateToken() {
-        const array = new Uint8Array(32);
-        crypto.getRandomValues(array);
-        return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
-    }
-    
-    async getPhoto(id) {
-        if (!this.isLoaded) await this.loadAll();
-        const photo = this.photos.find(p => p.id === id);
-        if (!photo) return { data: null, error: { message: '作品不存在' } };
-        return { data: photo, error: null };
-    }
-    
-    // ========================================
-    // 图片压缩优化工具
-    // ========================================
-    
-    /**
-     * 压缩图片文件
-     * @param {File} file - 原始图片文件
-     * @param {Object} options - 压缩选项
-     * @param {number} options.maxWidth - 最大宽度（默认 1920）
-     * @param {number} options.maxHeight - 最大高度（默认 1920）
-     * @param {number} options.quality - 压缩质量 0-1（默认 0.85）
-     * @param {string} options.type - 输出格式 'image/jpeg', 'image/webp', 'image/png'（默认 'image/jpeg'）
-     * @returns {Promise<Blob>} - 压缩后的图片 Blob
-     */
-    async compressImage(file, options = {}) {
-        const {
-            maxWidth = 1920,
-            maxHeight = 1920,
-            quality = 0.85,
-            type = 'image/jpeg'
-        } = options;
-
-        // 如果文件小于 200KB，不压缩
-        if (file.size < 200 * 1024) {
-            console.log(`[compressImage] 文件较小 (${(file.size / 1024).toFixed(1)}KB)，不压缩`);
-            return file;
-        }
-
-        return new Promise((resolve, reject) => {
-            console.log(`[compressImage] 开始压缩图片: ${file.name} (${(file.size / 1024).toFixed(1)}KB)`);
-            
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const img = new Image();
-                img.onload = () => {
-                    // 计算新的尺寸
-                    let width = img.width;
-                    let height = img.height;
-                    
-                    if (width > maxWidth) {
-                        height = Math.round(height * (maxWidth / width));
-                        width = maxWidth;
-                    }
-                    if (height > maxHeight) {
-                        width = Math.round(width * (maxHeight / height));
-                        height = maxHeight;
-                    }
-
-                    // 创建 Canvas
-                    const canvas = document.createElement('canvas');
-                    canvas.width = width;
-                    canvas.height = height;
-                    
-                    const ctx = canvas.getContext('2d');
-                    // 白色背景（对于 JPEG/WebP）
-                    if (type === 'image/jpeg' || type === 'image/webp') {
-                        ctx.fillStyle = '#FFFFFF';
-                        ctx.fillRect(0, 0, width, height);
-                    }
-                    
-                    // 绘制缩放后的图片
-                    ctx.drawImage(img, 0, 0, width, height);
-
-                    // 压缩输出
-                    canvas.toBlob(
-                        (blob) => {
-                            if (!blob) {
-                                reject(new Error('图片压缩失败'));
-                                return;
-                            }
-
-                            const compressRatio = (blob.size / file.size * 100).toFixed(1);
-                            console.log(`[compressImage] ✅ 压缩完成: ${(blob.size / 1024).toFixed(1)}KB (${compressRatio}% of original)`);
-                            resolve(blob);
-                        },
-                        type,
-                        quality
-                    );
-                };
-                
-                img.onerror = () => reject(new Error('无法加载图片'));
-                img.src = e.target.result;
-};
-            
-            reader.onerror = () => reject(new Error('无法读取文件'));
-            reader.readAsDataURL(file);
-        });
-    }
-
-    /**
-     * 根据用途获取推荐的压缩参数
-     * @param {string} usage - 用途: 'banner', 'photo', 'avatar', 'qrcode'
-     * @returns {Object} - 压缩选项
-     */
-    getCompressOptions(usage) {
-        const options = {
-            banner: {
-                maxWidth: 1920,
-                maxHeight: 1080,
-                quality: 0.85,
-                type: 'image/jpeg'
-            },
-            photo: {
-                maxWidth: 1600,
-                maxHeight: 1600,
-                quality: 0.85,
-                type: 'image/jpeg'
-            },
-            avatar: {
-                maxWidth: 400,
-                maxHeight: 400,
-                quality: 0.9,
-                type: 'image/jpeg'
-            },
-            qrcode: {
-                maxWidth: 600,
-                maxHeight: 600,
-                quality: 0.9,
-                type: 'image/png'
-            }
-        };
-        
-        return options[usage] || options.photo;
-    }
-
-    /**
-     * 上传并自动压缩图片
-     * @param {File} file - 原始图片文件
-     * @param {string} folder - 存储文件夹
-     * @param {string} usage - 用途（用于选择压缩参数）
-     * @returns {Promise<Object>} - 上传结果
-     */
-    async uploadAndCompress(file, folder = 'photos', usage = 'photo') {
-        try {
-            // 获取压缩参数
-            const compressOptions = this.getCompressOptions(usage);
-            
-            // 压缩图片
-            const compressedFile = await this.compressImage(file, compressOptions);
-            
-            // 创建新的 File 对象
-            const extension = compressOptions.type.split('/')[1] || 'jpg';
-            const newFileName = file.name.split('.')[0] + '_optimized.' + extension;
-            const compressedBlob = new File([compressedFile], newFileName, {
-                type: compressOptions.type
-            });
-            
-            // 上传压缩后的文件
-            return await this.uploadFile(compressedBlob, folder);
-        } catch (error) {
-            console.error(`[uploadAndCompress] ❌ 压缩上传失败:`, error);
-            // 如果压缩失败，回退到原始文件上传
-            console.warn('[uploadAndCompress] ⚠️ 回退到原始文件上传');
-            return await this.uploadFile(file, folder);
-        }
-    }
-
-    // 上传文件到 Supabase Storage
     async uploadFile(file, folder = 'banners') {
         try {
             // 检查 Supabase 配置
@@ -825,26 +536,22 @@ this.photos = JSON.parse(localPhotos);
             const fileName = `${folder}/${timestamp}-${random}.${extension}`;
             
             // 使用 Supabase Storage API
-            // 注意：这需要 Storage RLS 权限配置正确
-            const formData = new FormData();
-            formData.append('file', file);
-
-            // 尝试使用 fetch 上传（如果有权限）
-            const response = await fetch(`${SUPABASE_URL}/storage/v1/object/${STORAGE_BUCKET}/${fileName}`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-                },
-                body: file
-            });
+            const response = await fetch(
+                `${SUPABASE_URL}/storage/v1/object/${STORAGE_BUCKET}/${fileName}`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                    },
+                    body: file
+                }
+            );
 
             if (response.ok) {
-                const result = await response.json();
                 const publicUrl = `${SUPABASE_URL}/storage/v1/object/public/${STORAGE_BUCKET}/${fileName}`;
                 console.log('[uploadFile] 上传成功:', publicUrl);
                 return { data: { path: publicUrl, name: fileName }, error: null };
             } else {
-                // 如果上传失败，尝试本地存储
                 console.warn('[uploadFile] Supabase Storage 上传失败，使用本地存储');
                 return this.uploadToLocal(file, folder);
             }
@@ -854,13 +561,11 @@ this.photos = JSON.parse(localPhotos);
         }
     }
 
-    // 上传到本地存储（作为备选方案）
     uploadToLocal(file, folder) {
         return new Promise((resolve) => {
             const reader = new FileReader();
             reader.onload = function(e) {
                 const dataUrl = e.target.result;
-                console.log('[uploadToLocal] 文件已转换为 Base64');
                 resolve({ data: { path: dataUrl, name: file.name }, error: null });
             };
             reader.onerror = function(error) {
@@ -870,27 +575,24 @@ this.photos = JSON.parse(localPhotos);
         });
     }
 
-    // 上传 Banner 图片
     async uploadBanner(file) {
         return this.uploadFile(file, 'banners');
     }
 
-    // 上传作品图片
     async uploadPhoto(file) {
         return this.uploadFile(file, 'photos');
     }
 
-    // 上传头像
     async uploadAvatar(file) {
         return this.uploadFile(file, 'avatars');
     }
 
-    // 上传二维码
     async uploadQRCode(file, platform) {
         return this.uploadFile(file, `qrcodes/${platform}`);
     }
 }
 
+// 初始化函数
 async function initSupabase() {
     if (window.supabase && window.supabase.isLoaded) {
         return window.supabase;
